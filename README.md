@@ -1,80 +1,98 @@
 # Memory Bank Generator MCP Server
 
-> 🧠 Intelligent Memory Bank Generation for AI-Assisted Development
+> 🧠 Interactive Memory Bank Generation for AI-Assisted Development
 >
 > *2025 Microsoft Hackathon Project - Luke Pearson*
 
-An intelligent MCP server that automatically generates, maintains, and evolves comprehensive memory bank files for any software project, enabling AI assistants to have persistent, structured knowledge about codebases.
+An interactive MCP server that generates comprehensive memory banks for GitHub Copilot, enabling persistent project knowledge across sessions. Memory banks are created in a standardized `.github/memory-bank` directory with automatic Copilot integration.
 
 ## 🚀 Vision
 
-Transform how AI assistants understand and work with software projects by automatically creating rich, contextual memory banks that capture project essence, patterns, and evolution over time.
+Transform how AI assistants understand and work with software projects by providing an **interactive workflow** that creates rich, contextual memory banks tailored to each project's specific needs.
 
-## ✨ Key Features
+## ✨ Interactive Workflow
 
-### 🔍 **Intelligent Project Analysis**
+### 1. **Project Root Selection**
+When you request memory bank generation, the server first asks for your project's root directory - the folder where you want the `.github/memory-bank` directory created.
 
-- Automated codebase scanning and pattern detection
-- Multi-language support (JavaScript/TypeScript, Python, Java, C#, Go)
-- Dependency analysis and architecture mapping
-- Git history mining for project evolution insights
+### 2. **Customization Options**
+Choose your preferred approach:
+- **Standard Structure**: Complete memory bank with all core files
+- **Custom Structure**: Tailored to specific focus areas and requirements
 
-### 📝 **Comprehensive Memory Bank Generation**
+### 3. **Focus Areas** (Optional)
+Specify areas requiring special attention:
+- Complex algorithms or architectures
+- API patterns and integrations  
+- Testing strategies and frameworks
+- Specific implementation patterns
+- Performance-critical components
 
-- **Project Context**: Purpose, goals, and solution overview
-- **Technical Context**: Technology stack, architecture, and dependencies
-- **Active Context**: Current development focus and recent changes
-- **System Patterns**: Code patterns, best practices, and communication flows
-- **Progress Tracking**: Development timeline, feature status, and roadmap
+### 4. **Detail Level**
+Select analysis depth:
+- **High-level**: Overview and main concepts
+- **Detailed**: Comprehensive analysis (recommended)
+- **Granular**: Deep dive with extensive detail
 
-### 🔄 **Continuous Evolution**
+### 5. **Additional Files** (Optional)
+Request supplementary documentation:
+- API documentation
+- Integration guides
+- Testing strategies
+- Deployment procedures
+- Custom sections
 
-- Real-time change detection and memory bank updates
-- Intelligent merging of new information
-- Version tracking of memory bank evolution
-- Conflict resolution for competing information
+## 🛠️ Available Tools
 
-### 🔗 **Multi-Source Intelligence**
+### `generate_memory_bank`
+**Interactive memory bank generation**
+- Prompts for project root directory
+- Offers customization options
+- Creates `.github/memory-bank` directory
+- Generates all memory bank files
+- Sets up `copilot-instructions.md`
 
-- Code analysis via AST parsing
-- Git commit history analysis
-- Documentation extraction (README, comments, docs)
-- Integration with other MCP servers (GitHub, Azure DevOps)
-- Project metadata mining (package.json, requirements.txt, etc.)
+### `analyze_project_structure`
+**Pre-generation analysis**
+- Analyzes project structure and complexity
+- Provides recommendations for focus areas
+- Suggests optimal detail level
+- Identifies project type and patterns
 
-## 🎯 Value Proposition
+### `update_memory_bank`
+**Update existing memory banks**
+- Incremental updates for active projects
+- Full refresh for major changes
+- Specific file updates
 
-### For Developers
+### `validate_memory_bank`
+**Quality assurance**
+- Validates memory bank structure
+- Checks file completeness
+- Assesses content quality
+- Provides improvement recommendations
 
-- **Zero-effort Documentation**: Automatic generation and maintenance
-- **Knowledge Preservation**: Capture tribal knowledge and decisions
-- **Onboarding Acceleration**: New team members get instant project context
+### `setup_copilot_instructions`
+**Copilot integration**
+- Creates/updates `copilot-instructions.md`
+- Configures memory bank workflows
+- Sets up session reset handling
 
-### For AI Assistants
+## 📁 Memory Bank Structure
 
-- **Rich Context**: Deep understanding of project structure and patterns
-- **Persistent Memory**: Retain knowledge across conversations
-- **Better Assistance**: More accurate and contextually relevant help
+Memory banks are **always** created in `.github/memory-bank/` with these core files:
 
-### For Teams
-
-- **Shared Knowledge Base**: Consistent understanding across team members
-- **Living Documentation**: Evolves automatically with the codebase
-- **Decision History**: Track architectural decisions and their rationale
-
-## 🛠 How It Works
-
-```mermaid
-flowchart LR
-    Project[Your Project] --> Analyze[🔍 Analysis Engine]
-    Analyze --> Extract[📊 Context Extraction]
-    Extract --> Generate[🧠 Memory Bank Generation]
-    Generate --> Memory[📝 Structured Memory Banks]
-    Memory --> AI[🤖 AI Assistant]
-    
-    style Project fill:#f9f,stroke:#333,stroke-width:2px
-    style Memory fill:#bfb,stroke:#333,stroke-width:2px
-    style AI fill:#bbf,stroke:#333,stroke-width:2px
+```
+.github/
+├── memory-bank/
+│   ├── projectbrief.md          # Foundation document
+│   ├── productContext.md        # Purpose and goals
+│   ├── activeContext.md         # Current work focus
+│   ├── systemPatterns.md        # Architecture and patterns
+│   ├── techContext.md           # Technologies and setup
+│   ├── progress.md              # Status and milestones
+│   └── [additional files]       # Custom sections
+└── copilot-instructions.md      # Copilot configuration
 ```
 
 ## 🚀 Quick Start
@@ -91,130 +109,129 @@ npm install
 
 # Build the project
 npm run build
+
+# Test the server
+npm test
 ```
 
-### Basic Usage
+### Configuration
+
+#### For Claude Desktop
+
+1. **Find Claude Desktop's configuration file:**
+   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+2. **Add your MCP server configuration:**
+   ```json
+   {
+     "mcpServers": {
+       "memory-bank-generator": {
+         "command": "node",
+         "args": ["<MCP_SERVER_PATH>\\dist\\index.js"],
+         "env": {
+           "LOG_LEVEL": "info"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Restart Claude Desktop** - Your 5 MCP tools will be available!
+
+#### For VS Code
+
+1. **Add to VS Code's mcp.json:**
+   ```json
+   {
+     "servers": {
+       "memory-bank-generator": {
+         "command": "node",
+         "args": ["<MCP_SERVER_PATH>\\dist\\index.js"],
+         "env": {
+           "LOG_LEVEL": "info"
+         },
+         "type": "stdio"
+       }
+     }
+   }
+   ```
+
+2. **Restart VS Code** - Tools available through Copilot!
+
+### Verify Installation
 
 ```bash
-# Generate memory bank for a project
-npm run generate -- --project /path/to/your/project
-
-# Watch for changes and auto-update
-npm run watch -- --project /path/to/your/project
-
-# Generate with specific template
-npm run generate -- --project /path/to/your/project --template typescript
+npm test
 ```
 
-### MCP Integration
+You should see: ✅ All 5 MCP tools configured successfully!
 
-```json
-{
-  "mcpServers": {
-    "memory-bank-generator": {
-      "command": "node",
-      "args": ["./dist/index.js"],
-      "env": {
-        "MEMORY_BANK_PATH": "./memory-banks"
-      }
-    }
-  }
-}
+## 🎯 Usage Examples
+
+### Basic Memory Bank Generation
+```
+User: "I'd like to generate a memory bank for my project"
+Server: "What's the root directory for your project?"
+User: "C:\MyProjects\WebApp"
+Server: "Would you like the standard structure or custom approach?"
+User: "Standard"
+Server: [Generates complete memory bank]
 ```
 
-## 🧪 Example Output
-
-For a typical TypeScript project, the generator creates:
-
-```text
-memory-bank/
-├── projectContext.md     # "A React dashboard for project analytics..."
-├── techContext.md        # "Built with React 18, TypeScript 5.x, Vite..."
-├── activeContext.md      # "Currently implementing user authentication..."
-├── systemPatterns.md     # "Uses custom hooks pattern, REST API calls..."
-└── progress.md          # "✅ Core dashboard ⏳ Authentication 📋 Reports..."
+### Custom Memory Bank
+```
+User: "Generate a memory bank focusing on API patterns"
+Server: "What's your project root directory?"
+User: "/home/user/api-service"
+Server: "Any specific focus areas?"
+User: "REST API patterns, authentication, error handling"
+Server: [Creates tailored memory bank with API focus]
 ```
 
-## 🔧 MCP Tools
+## 🎯 Benefits
 
-The server provides these MCP tools for AI assistants:
+### For GitHub Copilot
+- **Context Persistence**: Maintains project understanding across sessions
+- **Consistent Responses**: Aligned with project patterns and decisions
+- **Informed Suggestions**: Based on actual project structure and goals
 
-- `analyze_project` - Deep project structure and pattern analysis
-- `generate_memory_bank` - Create comprehensive memory bank files
-- `update_memory_bank` - Incremental updates based on changes
-- `extract_from_source` - Pull context from Git, GitHub, Azure DevOps
-- `categorize_information` - Organize information into memory categories
-- `validate_memory_bank` - Ensure quality and completeness
+### For Developers
+- **Interactive Setup**: Tailored to your specific needs
+- **Standardized Location**: Always in `.github/memory-bank`
+- **Automatic Integration**: Copilot configured automatically
+- **Quality Assurance**: Built-in validation and recommendations
+
+## 🔄 Workflow Integration
+
+The memory bank integrates seamlessly with GitHub Copilot's session lifecycle:
+
+1. **Session Start**: Copilot reads memory bank for context
+2. **During Work**: Memory bank provides consistent guidance
+3. **After Changes**: Update memory bank to capture new insights
+4. **Session Reset**: Fresh Copilot relies entirely on memory bank
+
+## 📊 Memory Bank Categories
+
+- **Project Context**: Goals, requirements, and scope
+- **Technical Context**: Technologies, dependencies, and setup
+- **Active Context**: Current focus, recent changes, next steps
+- **System Patterns**: Architecture, design patterns, relationships
+- **Progress**: Status, accomplishments, known issues
 
 ## 🏗 Architecture
 
-Built on proven patterns from successful MCP servers:
+Streamlined architecture focused on interactive workflow:
 
 ```typescript
 src/
-├── operations/          # Core analysis and generation operations
-│   ├── analysis.ts     # Project structure analysis
-│   ├── extraction.ts   # Multi-source context extraction
-│   ├── generation.ts   # Memory bank generation engine
-│   └── integration.ts  # External MCP server integration
-├── common/             # Shared utilities and error handling
-├── types/              # TypeScript type definitions
-└── server.ts          # MCP server implementation
+├── index.ts              # Main MCP server with 5 tools
+└── fileOperations.ts     # Real file system operations
 ```
-
-## 🌟 Advanced Features
-
-### Template System
-
-- Pre-built templates for common project types
-- Customizable memory bank structures
-- Organization-specific templates
-
-### Integration Hub
-
-- Connect with GitHub MCP Server for repository data
-- Azure DevOps MCP Server integration for work items
-- Extensible plugin system for custom sources
-
-### Team Collaboration
-
-- Shared memory bank repositories
-- Conflict resolution for team edits
-- Access control and permissions
-
-## 📊 Success Metrics
-
-- **Generation Accuracy**: High-quality, relevant memory banks
-- **Time Savings**: 80%+ reduction in documentation time
-- **AI Improvement**: Better AI assistant responses with context
-- **Adoption Rate**: Growing community of users and contributors
-
-## 🗺 Roadmap
-
-### Phase 1: Core Foundation (Current)
-
-- ✅ Basic memory bank generation for TypeScript projects
-- ✅ File watching and incremental updates
-- ✅ GitHub integration
-- ✅ Command-line interface
-
-### Phase 2: Enhanced Intelligence
-
-- 🔄 Advanced pattern detection
-- 🔄 Multi-language support expansion
-- 🔄 Azure DevOps integration
-- 🔄 Web dashboard
-
-### Phase 3: Enterprise Features
-
-- 📋 Team collaboration tools
-- 📋 Enterprise security controls
-- 📋 Analytics and reporting
-- 📋 Custom integration framework
 
 ## 🤝 Contributing
 
-We welcome contributions! This project is part of the 2025 Microsoft Hackathon and aims to demonstrate the power of automated knowledge capture.
+This MCP server is designed for the 2025 Microsoft Hackathon. Contributions welcome!
 
 ### Development Setup
 
@@ -228,23 +245,22 @@ npm run dev
 ### Testing
 
 ```bash
-npm test                 # Unit tests
-npm run test:integration # Integration tests
-npm run test:security   # Security tests
+npm test                 # MCP server tests
+npm run test:file-ops    # File operation tests
 ```
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details
+MIT License - see LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-- Built on the foundation of successful MCP server patterns
-- Inspired by the Azure DevOps MCP Server architecture
+- Built using the Model Context Protocol SDK
+- Designed for seamless GitHub Copilot integration
 - Part of the 2025 Microsoft Hackathon innovation initiative
 
 ---
 
-> **🎯 Hackathon Goal**: Demonstrate how AI can automatically capture and maintain project knowledge, making software development more intelligent and collaborative.
+> **🎯 Hackathon Goal**: Demonstrate how interactive AI tools can automatically capture and maintain project knowledge, making software development more intelligent and collaborative.
 
 *Made with ❤️ for the developer community*

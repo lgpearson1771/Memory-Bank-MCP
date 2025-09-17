@@ -1,0 +1,13 @@
+{
+  "memory-bank-generator.mcp": {
+    "enabled": true,
+    "command": "node",
+    "args": [
+      "<MCP_SERVER_PATH>\\dist\\index.js"
+    ],
+    "env": {
+      "LOG_LEVEL": "info"
+    },
+    "description": "Interactive Memory Bank Generator MCP Server - Creates memory banks in .github/memory-bank with automatic Copilot integration"
+  }
+}

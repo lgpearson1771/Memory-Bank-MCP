@@ -19,7 +19,14 @@ Create an intelligent MCP server that automatically generates, maintains, and ev
 ## Problem Statement
 
 ### Current Pain Points
-1. **Manual Documentation Burden**: Developers spend significant time writing and maintaining project documentation
+1. **Manual Documentation Burde# Copy foundation files from Azure DevOps MCP
+cp <AZURE_DEVOPS_MCP_PATH>\package.json .
+cp <AZURE_DEVOPS_MCP_PATH>\tsconfig.json .
+cp <AZURE_DEVOPS_MCP_PATH>\jest.config.js .
+
+# 3. Copy memory bank as template
+mkdir templates
+cp -r <AZURE_DEVOPS_MCP_PATH>\memory-bank templates/memory-bank-templateelopers spend significant time writing and maintaining project documentation
 2. **Context Loss**: AI assistants lack persistent memory about project evolution, decisions, and patterns
 3. **Knowledge Silos**: Project knowledge exists in scattered locations (code comments, commit messages, conversations)
 4. **Inconsistent Documentation**: Different projects have varying documentation quality and structure
@@ -35,14 +42,14 @@ Create an intelligent MCP server that automatically generates, maintains, and ev
 ## Solution Overview
 
 ### Core Concept
-A specialized MCP server that analyzes codebases and automatically generates comprehensive memory bank files, similar to your Azure DevOps MCP server's memory-bank structure, but focused on any software project.
+✅ **IMPLEMENTED**: An interactive MCP server that guides users through memory bank generation with customizable options. The server uses a conversational workflow where it prompts for project root directory, customization preferences, and generates standardized `.github/memory-bank` directories with automatic GitHub Copilot integration.
 
-### Key Capabilities
-1. **Automatic Memory Bank Generation**: Scan projects and create structured memory files
-2. **Continuous Evolution**: Update memory banks as projects change
-3. **Multi-Project Support**: Manage memory banks for multiple projects simultaneously
-4. **Intelligent Categorization**: Automatically organize information into appropriate memory categories
-5. **Integration Hub**: Connect with various development tools and platforms
+### Key Capabilities - IMPLEMENTATION STATUS
+1. ✅ **Interactive Memory Bank Generation**: Conversational workflow for customized memory bank creation
+2. ✅ **Standardized Location**: Always creates memory banks in `.github/memory-bank` directory
+3. ✅ **Automatic Copilot Integration**: Creates/updates `copilot-instructions.md` automatically
+4. ✅ **Real File Operations**: Complete file system operations with validation
+5. ✅ **Customization Options**: Standard vs custom structure, focus areas, detail levels
 
 ---
 
@@ -60,104 +67,228 @@ A specialized MCP server that analyzes codebases and automatically generates com
 
 ---
 
-## Core Features
+## Core Features - IMPLEMENTATION STATUS
 
-### 1. Memory Bank Generation Engine
-**Priority**: Critical
-**Description**: Core engine that analyzes projects and generates memory bank files
+### ✅ 1. Interactive Memory Bank Generation Engine
+**Priority**: Critical  
+**Status**: COMPLETE  
+**Description**: Implemented conversational workflow for tailored memory bank generation
 
-#### Capabilities:
-- **Project Analysis**: Scan file structure, dependencies, code patterns
-- **Context Extraction**: Extract meaningful information from code, comments, commit history
-- **Template-Based Generation**: Use predefined templates for different project types
-- **Incremental Updates**: Track changes and update memory banks accordingly
+#### ✅ Implemented Capabilities:
+- **Project Root Selection**: Interactive prompts for project directory selection
+- **Customization Workflow**: Standard vs custom structure options  
+- **Focus Area Specification**: Optional areas requiring special attention
+- **Detail Level Selection**: High-level, detailed, or granular analysis
+- **Additional Files**: Optional supplementary documentation requests
+- **Real File Operations**: Complete `.github/memory-bank` directory creation
 
-#### Technical Implementation:
+#### Current Implementation:
 ```typescript
-// Memory Bank Generator Tools
-const tools = [
-  "analyze_project",           // Scan project structure and dependencies
-  "generate_memory_bank",      // Create initial memory bank files
-  "update_memory_bank",        // Update existing memory banks
-  "extract_context",           // Extract context from various sources
-  "categorize_information",    // Organize information into categories
-  "validate_memory_bank"       // Ensure quality and completeness
+// 5 MCP Tools Successfully Implemented
+const implementedTools = [
+  "generate_memory_bank",      // ✅ Interactive generation workflow
+  "analyze_project_structure", // ✅ Pre-generation project analysis  
+  "update_memory_bank",        // ✅ Update existing memory banks
+  "validate_memory_bank",      // ✅ Quality assurance and validation
+  "setup_copilot_instructions" // ✅ Automatic Copilot integration
 ];
 ```
 
-### 2. Multi-Source Intelligence
-**Priority**: High
-**Description**: Gather information from multiple sources to build comprehensive knowledge
+### ✅ 2. Standardized Memory Bank Structure
+**Priority**: Critical  
+**Status**: COMPLETE  
+**Description**: Creates standardized `.github/memory-bank` directories with 6 core files
 
-#### Sources:
+#### ✅ Generated Structure:
+```
+.github/
+├── memory-bank/
+│   ├── projectbrief.md          # ✅ Foundation document
+│   ├── productContext.md        # ✅ Purpose and goals
+│   ├── activeContext.md         # ✅ Current work focus
+│   ├── systemPatterns.md        # ✅ Architecture and patterns
+│   ├── techContext.md           # ✅ Technologies and setup
+│   └── progress.md              # ✅ Status and milestones
+└── copilot-instructions.md      # ✅ Automatic Copilot configuration
+```
+
+### ✅ 3. Interactive User Experience
+**Priority**: High  
+**Status**: COMPLETE  
+**Description**: Conversational workflow replacing automated analysis
+
+#### ✅ Implemented Workflow:
+1. **Project Selection**: User provides project root directory
+2. **Customization Options**: Standard or custom approach selection
+3. **Focus Configuration**: Optional specific areas of interest
+4. **Detail Level**: User-selected analysis depth
+5. **File Generation**: Real file system operations in `.github/memory-bank`
+6. **Copilot Integration**: Automatic setup of `copilot-instructions.md`
+
+### 🔄 4. Multi-Source Intelligence (FUTURE ENHANCEMENT)
+**Priority**: Medium  
+**Status**: PLANNED  
+**Description**: Currently uses interactive user input; future versions will add automated analysis
+
+#### Planned Sources:
 - **Code Analysis**: AST parsing, dependency analysis, pattern detection
 - **Git History**: Commit messages, branch patterns, contributor analysis
 - **Documentation**: README files, code comments, documentation sites
 - **Project Metadata**: Package.json, requirements.txt, configuration files
-- **Issue Tracking**: GitHub Issues, Azure DevOps work items (via other MCP servers)
 
-### 3. Smart Categorization System
-**Priority**: High
-**Description**: Automatically organize information into structured categories
+### ✅ 5. GitHub Copilot Integration
+**Priority**: High  
+**Status**: COMPLETE  
+**Description**: Automatic setup and configuration for GitHub Copilot workflows
 
-#### Memory Bank Categories:
-1. **Project Context** (`projectContext.md`)
-   - Purpose and goals
-   - Problem being solved
-   - Solution overview
-   - Target users
+#### ✅ Features:
+- **Automatic Setup**: Creates `copilot-instructions.md` in project root
+- **Memory Bank References**: Configures Copilot to use generated memory bank
+- **Session Lifecycle**: Handles session start, work, and reset workflows
+- **Embedded Template**: Self-contained Copilot configuration template
 
-2. **Technical Context** (`techContext.md`)
-   - Technology stack
-   - Architecture patterns
-   - Dependencies
-   - Build/deployment process
-
-3. **Active Context** (`activeContext.md`)
-   - Current development focus
-   - Recent changes
-   - Active decisions
-   - Implementation status
-
-4. **System Patterns** (`systemPatterns.md`)
-   - Code patterns
-   - Communication flows
-   - Best practices
-   - Evolution patterns
-
-5. **Progress Tracking** (`progress.md`)
-   - Development timeline
-   - Feature status
-   - Known issues
-   - Future roadmap
-
-### 4. Continuous Evolution Engine
-**Priority**: Medium
-**Description**: Keep memory banks current as projects evolve
-
-#### Features:
-- **Change Detection**: Monitor file changes, commits, and project updates
-- **Intelligent Updates**: Update relevant memory bank sections based on changes
-- **Version Tracking**: Maintain history of memory bank evolution
-- **Conflict Resolution**: Handle conflicting information intelligently
-
-### 5. Integration Framework
-**Priority**: Medium
-**Description**: Connect with other MCP servers and development tools
-
-#### Integrations:
-- **GitHub MCP Server**: Pull repository information, issues, pull requests
-- **Azure DevOps MCP Server**: Work items, repositories, project data
-- **File System MCP Server**: Monitor local file changes
-- **Custom Integrations**: Plugin system for additional tools
+#### 🔄 PLANNED ENHANCEMENTS:
+- **Dynamic File Inclusion**: Automatically include all memory bank files (including additional/custom files) in `copilot-instructions.md`
+- **Validation Integration**: Verify all memory bank files are referenced in Copilot instructions during validation
+- **Automatic Updates**: Update Copilot instructions when memory bank files are added or removed
 
 ---
 
-## Technical Architecture
+## Technical Architecture - CURRENT IMPLEMENTATION
 
-### Core Components
+### ✅ Implemented Architecture
 
-#### 1. Analysis Engine
+#### Streamlined Interactive Design
+The current implementation uses a simplified, interactive architecture focused on user-guided memory bank generation:
+
+```typescript
+// Current Architecture (src/)
+├── index.ts              // ✅ Main MCP server with 5 interactive tools
+└── fileOperations.ts     // ✅ Real file system operations
+```
+
+#### ✅ Core Components
+
+##### 1. Interactive MCP Server (index.ts)
+```typescript
+// ✅ Implemented - 5 Interactive Tools
+const implementedTools = [
+  {
+    name: "generate_memory_bank",
+    description: "Interactive memory bank generation with customization options",
+    schema: { projectRootPath: string, customizationOptions?: object }
+  },
+  {
+    name: "analyze_project_structure", 
+    description: "Analyze project structure to prepare for memory bank generation",
+    schema: { projectRootPath: string, analysisDepth?: enum }
+  },
+  {
+    name: "update_memory_bank",
+    description: "Update existing memory bank with new project information", 
+    schema: { projectRootPath: string, updateType?: enum, specificFiles?: array }
+  },
+  {
+    name: "validate_memory_bank",
+    description: "Validate existing memory bank structure and completeness",
+    schema: { projectRootPath: string }
+  },
+  {
+    name: "setup_copilot_instructions",
+    description: "Create or update copilot-instructions.md with memory bank integration",
+    schema: { projectRootPath: string }
+  }
+];
+```
+
+##### 2. File Operations Engine (fileOperations.ts)
+```typescript
+// ✅ Implemented - Real File System Operations
+interface FileOperations {
+  ensureMemoryBankDirectory(projectRoot: string): Promise<string>;
+  analyzeProject(projectRoot: string): Promise<ProjectAnalysis>;
+  generateMemoryBankFiles(projectRoot: string, options: CustomizationOptions): Promise<void>;
+  updateMemoryBank(projectRoot: string, updateType: UpdateType): Promise<void>;
+  validateMemoryBank(projectRoot: string): Promise<ValidationResult>;
+  setupCopilotInstructions(projectRoot: string): Promise<void>;
+}
+
+// 🔄 PLANNED ENHANCEMENTS
+interface EnhancedFileOperations extends FileOperations {
+  // Dynamic Copilot integration with all memory bank files
+  setupCopilotInstructions(projectRoot: string, memoryBankFiles: string[]): Promise<void>;
+  
+  // Enhanced validation with Copilot instructions synchronization check
+  validateMemoryBank(projectRoot: string): Promise<EnhancedValidationResult>;
+  
+  // Utility to sync Copilot instructions with memory bank contents
+  syncCopilotWithMemoryBank(projectRoot: string): Promise<SyncResult>;
+}
+
+interface EnhancedValidationResult extends ValidationResult {
+  copilotSyncStatus: {
+    allFilesReferenced: boolean;
+    missingReferences: string[];
+    extraReferences: string[];
+    requiresUpdate: boolean;
+  };
+}
+```
+
+#### ✅ Interactive Workflow Architecture
+
+```mermaid
+flowchart TD
+    Start[User Requests Memory Bank] --> ProjectRoot[Prompt for Project Root]
+    ProjectRoot --> Options[Offer Customization Options]
+    Options --> Standard[Standard Structure] 
+    Options --> Custom[Custom Structure]
+    Standard --> Generate[Generate Memory Bank Files]
+    Custom --> Focus[Select Focus Areas]
+    Focus --> Detail[Choose Detail Level]
+    Detail --> Additional[Optional Additional Files]
+    Additional --> Generate
+    Generate --> Validate[Validate Generated Files]
+    Validate --> Copilot[Setup Copilot Integration]
+    Copilot --> Complete[✅ Complete Memory Bank]
+    
+    style Start fill:#f9f,stroke:#333,stroke-width:2px
+    style Complete fill:#bfb,stroke:#333,stroke-width:2px
+```
+
+### Technology Stack - CURRENT IMPLEMENTATION
+
+#### ✅ Core Technologies
+- **Node.js v18+**: Runtime environment ✅ Working
+- **TypeScript 5.x**: Type-safe development ✅ Strict configuration
+- **MCP SDK v0.5.0**: Protocol implementation ✅ Direct integration pattern
+- **fs/promises**: File system operations ✅ Real file creation
+- **path**: Cross-platform path handling ✅ Windows/Unix compatibility
+
+#### ✅ Development Stack
+- **ESLint + Prettier**: Code quality ✅ Configured
+- **Jest**: Testing framework ✅ All tests passing
+- **TypeScript**: Strict compilation ✅ No errors
+
+#### File Structure Created
+```
+<PROJECT_ROOT>/
+└── .github/
+    ├── memory-bank/
+    │   ├── projectbrief.md          # ✅ Foundation document
+    │   ├── productContext.md        # ✅ Purpose and goals  
+    │   ├── activeContext.md         # ✅ Current work focus
+    │   ├── systemPatterns.md        # ✅ Architecture patterns
+    │   ├── techContext.md           # ✅ Technologies and setup
+    │   └── progress.md              # ✅ Status and milestones
+    └── copilot-instructions.md      # ✅ Copilot integration
+```
+
+### ORIGINAL PLANNED ARCHITECTURE (Future Enhancement)
+
+The original comprehensive architecture remains as future enhancement goals:
+
+#### Future Analysis Engine
 ```typescript
 interface AnalysisEngine {
   scanProject(projectPath: string): ProjectStructure;
@@ -167,7 +298,7 @@ interface AnalysisEngine {
 }
 ```
 
-#### 2. Memory Bank Generator
+#### Future Memory Bank Generator  
 ```typescript
 interface MemoryBankGenerator {
   generateMemoryBank(project: ProjectAnalysis): MemoryBank;
@@ -176,7 +307,7 @@ interface MemoryBankGenerator {
 }
 ```
 
-#### 3. Integration Manager
+#### Future Integration Manager
 ```typescript
 interface IntegrationManager {
   connectToMCPServer(serverConfig: MCPServerConfig): MCPConnection;
@@ -345,45 +476,202 @@ flowchart LR
 
 ---
 
-## Implementation Roadmap
+## Implementation Roadmap - PROGRESS UPDATE
 
-### Phase 1: Core Foundation (Hackathon MVP)
-**Timeline**: 2-3 weeks
-**Scope**: Basic memory bank generation for JavaScript/TypeScript projects
+### ✅ Phase 1: Core Foundation (Hackathon MVP) - COMPLETE
+**Timeline**: 2-3 weeks  
+**Status**: ✅ COMPLETE  
+**Scope**: Interactive memory bank generation with user-guided customization
 
-#### Features:
-- ✅ Project structure analysis
-- ✅ Basic memory bank generation (5 core categories)
-- ✅ Simple file watching for updates
-- ✅ GitHub integration (using existing GitHub MCP server)
-- ✅ Command-line interface
+#### ✅ Completed Features
+- ✅ **Interactive Project Selection**: Prompts for project root directory
+- ✅ **Customizable Memory Bank Generation**: Standard vs custom structure options
+- ✅ **Real File Operations**: Complete `.github/memory-bank` directory creation
+- ✅ **Automatic Copilot Integration**: Creates/updates `copilot-instructions.md`
+- ✅ **5 MCP Tools**: All tools implemented and working
 
-#### Deliverables:
-- Working MCP server
-- Sample memory banks for popular open source projects
-- Documentation and demo
+#### ✅ Delivered
+- ✅ Working MCP server with 5 interactive tools
+- ✅ Real file system operations (not just analysis)
+- ✅ Standardized `.github/memory-bank` structure
+- ✅ Automatic GitHub Copilot integration
+- ✅ Complete documentation and examples
+- ✅ VS Code integration configured and working
 
-### Phase 2: Enhanced Intelligence (Post-Hackathon)
-**Timeline**: 1-2 months
-**Scope**: Advanced analysis and multi-language support
+#### ✅ Implementation Details
+```typescript
+// Successfully implemented architecture
+src/
+├── index.ts              // Main MCP server - 5 interactive tools
+└── fileOperations.ts     // Real file operations with validation
 
-#### Features:
-- Advanced code pattern detection
-- Support for Python, Java, C#, Go projects
-- Integration with Azure DevOps MCP server
-- Web dashboard for project management
-- Template customization
+// Generated memory bank structure (standardized)
+.github/
+├── memory-bank/
+│   ├── projectbrief.md          // Foundation document
+│   ├── productContext.md        // Purpose and goals
+│   ├── activeContext.md         // Current work focus
+│   ├── systemPatterns.md        // Architecture and patterns
+│   ├── techContext.md           // Technologies and setup
+│   └── progress.md              // Status and milestones
+└── copilot-instructions.md      // Automatic Copilot configuration
+```
 
-### Phase 3: Enterprise Features (Future)
-**Timeline**: 3-6 months
-**Scope**: Enterprise-grade features and integrations
+### 🔄 Phase 2: Enhanced Intelligence (NEXT STEPS)
+**Timeline**: 1-2 months  
+**Status**: PLANNED  
+**Scope**: Add automated project analysis to complement interactive workflow
 
-#### Features:
-- Team collaboration features
-- Advanced security and privacy controls
-- Custom integration framework
-- Analytics and reporting
-- Enterprise deployment options
+#### Planned Features
+- **Automated Code Analysis**: AST parsing and pattern detection
+- **Multi-Language Support**: Python, Java, C#, Go projects beyond JavaScript/TypeScript
+- **Git History Integration**: Extract insights from commit history and branch patterns
+- **Enhanced Validation**: Advanced content quality assessment
+- **Template Customization**: Industry-specific memory bank templates
+
+#### Technical Enhancements
+```typescript
+// Planned architecture expansion
+src/
+├── index.ts              // ✅ Current: Interactive MCP server
+├── fileOperations.ts     // ✅ Current: File system operations
+├── analysis/             // 🔄 Planned: Automated analysis engine
+│   ├── codeAnalyzer.ts   //     AST parsing and pattern detection
+│   ├── gitAnalyzer.ts    //     Git history and branch analysis
+│   └── projectAnalyzer.ts//     Project structure analysis
+├── templates/            // 🔄 Planned: Template management
+│   ├── standard.ts       //     Standard memory bank templates
+│   ├── framework/        //     Framework-specific templates
+│   └── industry/         //     Industry-specific templates
+└── integrations/         // 🔄 Planned: External MCP integrations
+    ├── github.ts         //     GitHub MCP server integration
+    └── azureDevOps.ts    //     Azure DevOps MCP integration
+```
+
+### 🚀 Phase 3: Enterprise Features (FUTURE)
+**Timeline**: 3-6 months  
+**Status**: PLANNED  
+**Scope**: Enterprise-grade features and team collaboration
+
+#### Planned Features
+- **Team Collaboration**: Multi-user memory bank editing and approval workflows
+- **Advanced Security**: Enterprise authentication and privacy controls
+- **Custom Integration Framework**: Plugin system for proprietary tools
+- **Analytics and Reporting**: Memory bank usage and effectiveness metrics
+- **Enterprise Deployment**: Docker containers, cloud deployment options
+
+## DETAILED NEXT STEPS
+
+### Critical Implementation Requirements
+
+#### Dynamic Copilot Integration
+**Priority**: High - Immediate Implementation Required
+
+1. **Dynamic File Discovery**
+   - Scan `.github/memory-bank/` directory for all files (core + additional)
+   - Generate dynamic file list for Copilot instructions
+   - Support custom file extensions and naming patterns
+
+2. **Copilot Instructions Template Enhancement**
+   - Modify embedded template to accept dynamic file list
+   - Generate file-specific reading instructions for each memory bank file
+   - Maintain proper Markdown formatting and structure
+
+3. **Validation Synchronization**
+   - Add new validation check: `validateCopilotSync()`
+   - Compare memory bank directory contents with Copilot instructions references
+   - Report missing, extra, or mismatched file references
+   - Provide auto-repair suggestions
+
+#### Technical Implementation Details
+
+```typescript
+// New validation interface
+interface CopilotSyncValidation {
+  memoryBankFiles: string[];           // Files found in .github/memory-bank/
+  copilotReferences: string[];         // Files referenced in copilot-instructions.md
+  missingReferences: string[];         // Memory bank files not in Copilot instructions
+  extraReferences: string[];           // Copilot references not in memory bank
+  isFullySynced: boolean;              // True if all files properly referenced
+}
+
+// Enhanced validation result
+interface ValidationResult {
+  isValid: boolean;
+  missingFiles: string[];
+  quality: QualityMetrics;
+  copilotSync: CopilotSyncValidation;  // New sync validation
+}
+```
+
+### Immediate Actions (Next 1-2 weeks)
+1. **Enhanced Project Analysis**
+   - Add automated file structure analysis to complement user input
+   - Implement basic package.json/requirements.txt parsing
+   - Add technology stack detection
+
+2. **Improved Content Generation**
+   - Enhance memory bank content with more project-specific details
+   - Add template variations for different project types
+   - Implement content validation and quality scoring
+
+3. **Dynamic Copilot Integration**
+   - **Modify `setup_copilot_instructions`**: Dynamically include all memory bank files (core + additional) in `copilot-instructions.md`
+   - **Enhance `validate_memory_bank`**: Add validation check to verify all files in `.github/memory-bank/` are referenced in `copilot-instructions.md`
+   - **Auto-sync mechanism**: Ensure Copilot instructions stay synchronized when memory bank files are added/removed
+
+4. **Better Error Handling**
+   - Add comprehensive error handling for edge cases
+   - Implement retry logic for file operations
+   - Add detailed logging and debugging capabilities
+
+### Medium-term Goals (1-2 months)
+1. **Multi-Language Support**
+   - Add Python project analysis
+   - Support Java/Maven projects
+   - Add C#/.NET project handling
+
+2. **Git Integration**
+   - Parse commit history for project evolution insights
+   - Extract contributor information and patterns
+   - Analyze branch strategies and development workflows
+
+3. **Advanced Validation & Synchronization**
+   - Implement content quality assessment
+   - Add memory bank completeness scoring
+   - Create improvement recommendations
+   - **Comprehensive File Synchronization**: Robust validation that all memory bank files are properly referenced in Copilot instructions
+   - **Automated Repair**: Auto-fix missing file references in `copilot-instructions.md`
+
+### Long-term Vision (3-6 months)
+1. **Integration Ecosystem**
+   - Connect with GitHub MCP server for repository data
+   - Integrate with Azure DevOps MCP for work items
+   - Build plugin framework for custom integrations
+
+2. **Enterprise Features**
+   - Multi-user collaboration workflows
+   - Version control for memory banks
+   - Team approval and review processes
+
+3. **Intelligence Enhancement**
+   - Machine learning for pattern recognition
+   - Automated memory bank evolution suggestions
+   - Cross-project learning and insights
+
+## SUCCESS CRITERIA - CURRENT STATUS
+
+### ✅ Hackathon Goals - ACHIEVED
+1. ✅ **Working Demo**: 5 MCP tools implemented and tested
+2. ✅ **Real File Operations**: Creates actual `.github/memory-bank` directories
+3. ✅ **MCP Compatibility**: Successfully integrated with VS Code and Claude Desktop
+4. ✅ **Clear Value**: Demonstrates automated Copilot integration and persistent knowledge
+
+### Next Success Milestones
+1. **Enhanced Automation**: Add project analysis to reduce user input requirements
+2. **Multi-Project Demo**: Show memory bank generation across different technology stacks
+3. **Community Adoption**: Gather feedback and iterate based on real usage
+4. **Integration Showcase**: Demonstrate connections with other MCP servers
 
 ---
 
@@ -448,7 +736,7 @@ flowchart LR
 ## Development Strategy & Reference Architecture
 
 ### Reference Project Location
-**Azure DevOps MCP Server**: `C:\MCPs\AzureDevOps-MCP`
+**Azure DevOps MCP Server**: `<AZURE_DEVOPS_MCP_PATH>`
 
 This Memory Bank Generator MCP Server is designed as a **separate, standalone project** that leverages proven patterns from the successful Azure DevOps MCP Server implementation.
 
@@ -461,7 +749,7 @@ This Memory Bank Generator MCP Server is designed as a **separate, standalone pr
 - **Hackathon Clarity**: Standalone project demonstrates clear innovation
 
 #### 2. Leverage Proven Patterns
-Copy and adapt these successful patterns from `C:\MCPs\AzureDevOps-MCP`:
+Copy and adapt these successful patterns from `<AZURE_DEVOPS_MCP_PATH>`:
 
 ```typescript
 // File patterns to reference/copy:
@@ -619,7 +907,7 @@ flowchart LR
 
 ### File References for Development
 
-#### Critical Files to Copy/Reference from `C:\MCPs\AzureDevOps-MCP`:
+#### Critical Files to Copy/Reference from `<AZURE_DEVOPS_MCP_PATH>`
 
 ##### Configuration & Setup
 - `package.json` - Complete dependency and script setup
@@ -670,4 +958,4 @@ flowchart LR
 *Updated: September 16, 2025*  
 *Project: Memory Bank Generator MCP Server*  
 *Event: 2025 Microsoft Hackathon*  
-*Reference Project: Azure DevOps MCP Server (`C:\MCPs\AzureDevOps-MCP`)*
+*Reference Project: Azure DevOps MCP Server (`<AZURE_DEVOPS_MCP_PATH>`)*

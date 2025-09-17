@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "memory-bank-generator": {
+      "command": "node",
+      "args": [
+        "<MCP_SERVER_PATH>\\dist\\index.js"
+      ],
+      "env": {
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
