@@ -44,7 +44,7 @@ async function main() {
       tools: [
         {
           name: 'generate_memory_bank',
-          description: 'Interactive memory bank generation for a project. Starts with project root selection, then customization options.',
+          description: 'Interactive memory bank generation for a project. Creates core files at root level, with optional semantic organization for additional files into purpose-based folders (features/, integrations/, deployment/, etc.).',
           inputSchema: {
             type: 'object',
             properties: {
@@ -60,6 +60,11 @@ async function main() {
                     type: 'string',
                     enum: ['standard', 'custom'],
                     description: 'Use standard structure or custom approach',
+                  },
+                  semanticOrganization: {
+                    type: 'boolean',
+                    description: 'Enable semantic folder organization for additional files (default: true)',
+                    default: true,
                   },
                   focusAreas: {
                     type: 'array',
@@ -78,7 +83,37 @@ async function main() {
                     items: {
                       type: 'string'
                     },
-                    description: 'Additional files or sections to include',
+                    description: 'Additional files or sections to include (will be organized into semantic folders if enabled)',
+                  },
+                  customFolders: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        name: {
+                          type: 'string',
+                          description: 'Folder name'
+                        },
+                        description: {
+                          type: 'string',
+                          description: 'Purpose description for this folder'
+                        },
+                        filePatterns: {
+                          type: 'array',
+                          items: {
+                            type: 'string'
+                          },
+                          description: 'File name patterns that should go in this folder'
+                        }
+                      },
+                      required: ['name', 'description', 'filePatterns']
+                    },
+                    description: 'Custom semantic folders for project-specific organization',
+                  },
+                  syncValidation: {
+                    type: 'boolean',
+                    description: 'Enable sync validation between memory bank and Copilot instructions (default: true)',
+                    default: true,
                   },
                 },
               },
@@ -133,13 +168,18 @@ async function main() {
         },
         {
           name: 'validate_memory_bank',
-          description: 'Validate existing memory bank structure and completeness',
+          description: 'Validate existing memory bank structure, completeness, and optionally sync with Copilot instructions',
           inputSchema: {
             type: 'object',
             properties: {
               projectRootPath: {
                 type: 'string',
                 description: 'Root folder path containing .github/memory-bank',
+              },
+              syncValidation: {
+                type: 'boolean',
+                description: 'Enable comprehensive sync validation with Copilot instructions (default: false)',
+                default: false,
               },
             },
             required: ['projectRootPath'],
@@ -177,9 +217,12 @@ async function main() {
           const projectRootPath = (args as any).projectRootPath;
           const customizationOptions: MemoryBankOptions = {
             structureType: (args as any).customizationOptions?.structureType || 'standard',
+            semanticOrganization: (args as any).customizationOptions?.semanticOrganization !== false,
             focusAreas: (args as any).customizationOptions?.focusAreas || [],
             detailLevel: (args as any).customizationOptions?.detailLevel || 'detailed',
             additionalFiles: (args as any).customizationOptions?.additionalFiles || [],
+            customFolders: (args as any).customizationOptions?.customFolders || [],
+            syncValidation: (args as any).customizationOptions?.syncValidation !== false,
           };
           
           try {
@@ -189,11 +232,26 @@ async function main() {
             // Analyze the project
             const analysis = await analyzeProject(projectRootPath, 'medium');
             
-            // Generate memory bank files
+            // Generate memory bank files with semantic organization
             const createdFiles = await generateMemoryBankFiles(memoryBankDir, analysis, customizationOptions);
             
-            // Setup copilot instructions
-            await setupCopilotInstructions(projectRootPath);
+            // Setup dynamic copilot instructions with sync validation
+            await setupCopilotInstructions(projectRootPath, { 
+              syncValidation: customizationOptions.syncValidation || false
+            });
+            
+            // Validate the result if sync validation is enabled
+            let validation = undefined;
+            if (customizationOptions.syncValidation) {
+              validation = await validateMemoryBank(memoryBankDir, { 
+                syncValidation: true, 
+                projectRoot: projectRootPath 
+              });
+            }
+            
+            const coreFiles = ['projectbrief.md', 'productContext.md', 'activeContext.md', 'systemPatterns.md', 'techContext.md', 'progress.md'];
+            const coreFilesCreated = createdFiles.filter(f => coreFiles.includes(f));
+            const additionalFilesCreated = createdFiles.filter(f => !coreFiles.includes(f));
             
             return {
               content: [
@@ -204,13 +262,29 @@ async function main() {
                     projectRootPath,
                     memoryBankLocation: memoryBankDir,
                     projectAnalysis: analysis,
+                    organizationStructure: {
+                      type: customizationOptions.semanticOrganization ? 'semantic' : 'flat',
+                      coreFilesAtRoot: coreFilesCreated.length,
+                      additionalFiles: additionalFilesCreated.length,
+                      semanticFolders: customizationOptions.semanticOrganization ? 
+                        additionalFilesCreated.filter(f => f.includes('/')).map(f => f.split('/')[0]).filter((v, i, a) => a.indexOf(v) === i) : 
+                        []
+                    },
                     structureType: customizationOptions.structureType,
                     detailLevel: customizationOptions.detailLevel,
                     focusAreas: customizationOptions.focusAreas,
-                    coreFilesCreated: createdFiles.filter(f => ['projectbrief.md', 'productContext.md', 'activeContext.md', 'systemPatterns.md', 'techContext.md', 'progress.md'].includes(f)),
-                    additionalFilesCreated: createdFiles.filter(f => !['projectbrief.md', 'productContext.md', 'activeContext.md', 'systemPatterns.md', 'techContext.md', 'progress.md'].includes(f)),
+                    coreFilesCreated,
+                    additionalFilesCreated,
                     copilotInstructionsUpdated: true,
-                    message: `✅ Memory bank generated successfully at ${memoryBankDir}\n✅ Copilot instructions updated\n\nGitHub Copilot will now have persistent project knowledge across sessions. The memory bank includes ${createdFiles.length} files tailored to your ${analysis.projectType}.`
+                    syncValidation: validation ? {
+                      enabled: true,
+                      isInSync: validation.copilotSync?.isInSync,
+                      totalFiles: validation.structureCompliance.totalFiles,
+                      organization: validation.structureCompliance.organization
+                    } : { enabled: false },
+                    message: customizationOptions.semanticOrganization ?
+                      `✅ Memory bank generated with semantic organization at ${memoryBankDir}\n✅ Dynamic Copilot instructions updated\n\nCore files (${coreFilesCreated.length}) at root level, additional files (${additionalFilesCreated.length}) organized semantically. GitHub Copilot now has persistent project knowledge across sessions.` :
+                      `✅ Memory bank generated with flat structure at ${memoryBankDir}\n✅ Copilot instructions updated\n\nAll ${createdFiles.length} files created at root level. GitHub Copilot now has persistent project knowledge across sessions.`
                   }, null, 2),
                 },
               ],
@@ -300,10 +374,14 @@ async function main() {
 
         case 'validate_memory_bank': {
           const projectRootPath = (args as any).projectRootPath;
+          const syncValidation = (args as any).syncValidation || false;
           const memoryBankDir = `${projectRootPath}/.github/memory-bank`;
           
           try {
-            const validation = await validateMemoryBank(memoryBankDir);
+            const validation = await validateMemoryBank(memoryBankDir, { 
+              syncValidation, 
+              projectRoot: syncValidation ? projectRootPath : undefined 
+            });
             
             return {
               content: [
@@ -314,9 +392,26 @@ async function main() {
                     projectRootPath,
                     memoryBankLocation: memoryBankDir,
                     validation,
+                    structureAnalysis: {
+                      organization: validation.structureCompliance.organization,
+                      totalFiles: validation.structureCompliance.totalFiles,
+                      semanticFolders: validation.structureCompliance.hasSemanticFolders ? 
+                        validation.structureCompliance.folderCount : 0,
+                      coreFilesPresent: validation.coreFilesPresent.length,
+                      missingCoreFiles: validation.missingFiles.length,
+                      additionalFiles: validation.additionalFiles.length
+                    },
+                    syncValidation: syncValidation ? {
+                      enabled: true,
+                      isInSync: validation.copilotSync?.isInSync || false,
+                      memoryBankFiles: validation.copilotSync?.memoryBankFiles?.length || 0,
+                      copilotReferences: validation.copilotSync?.copilotReferences?.length || 0,
+                      missingReferences: validation.copilotSync?.missingReferences?.length || 0,
+                      orphanedReferences: validation.copilotSync?.orphanedReferences?.length || 0
+                    } : { enabled: false },
                     message: validation.isValid ? 
-                      `✅ Memory bank is valid and complete (${validation.quality.completeness} complete)` :
-                      `❌ Memory bank validation failed. Missing files: ${validation.missingFiles.join(', ')}`
+                      `✅ Memory bank is valid and complete (${validation.quality.completeness} complete, ${validation.quality.consistency} consistency, ${validation.quality.clarity} clarity)${syncValidation && validation.copilotSync?.isInSync ? '\n✅ Fully synchronized with Copilot instructions' : ''}` :
+                      `❌ Memory bank validation failed. Missing files: ${validation.missingFiles.join(', ')}${syncValidation && !validation.copilotSync?.isInSync ? `\n⚠️ Sync issues: ${validation.copilotSync?.missingReferences?.length || 0} unreferenced files, ${validation.copilotSync?.orphanedReferences?.length || 0} orphaned references` : ''}`
                   }, null, 2),
                 },
               ],

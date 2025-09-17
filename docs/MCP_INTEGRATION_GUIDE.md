@@ -1,4 +1,16 @@
-# How to Configure and Verify MCP Servers in VS Code
+# How to Configure and Verify Memory Bank Generator MCP Server
+
+## 🚀 Overview
+
+The Memory Bank Generator MCP Server provides 5 interactive tools for creating and managing memory banks with **intelligent semantic organization**. This guide will help you integrate it with Claude Desktop, VS Code, and other MCP-compatible clients.
+
+## 🔧 Key Features
+
+- **Semantic Organization**: Smart categorization of files into purpose-based folders
+- **Dynamic Copilot Integration**: Instructions automatically adapt to memory bank structure
+- **Interactive Workflow**: User-guided customization for project-specific needs
+- **Comprehensive Validation**: Sync checking between memory bank and Copilot instructions
+- **Flexible Structure**: Choice between semantic organization and flat structure
 
 ## 🔍 Where to Find MCP Server Configuration in VS Code
 
@@ -73,6 +85,52 @@
      }
    }
    ```
+
+## 🛠️ Available MCP Tools
+
+Once configured, you'll have access to these 5 interactive tools:
+
+### 1. `generate_memory_bank`
+**Interactive memory bank generation with semantic organization**
+- Choose between semantic organization (default) or flat structure
+- Smart categorization of additional files into purpose-based folders
+- User-driven generation - only creates files you explicitly request
+- Automatic dynamic Copilot integration
+
+**Example Usage:**
+```
+User: "Generate a memory bank for my React project"
+Tool: Prompts for project root, organization preference, additional files
+Result: Core files + semantic folders (features/, integrations/, etc.) if requested
+```
+
+### 2. `analyze_project_structure`
+**Pre-generation analysis and recommendations**
+- Analyzes project complexity and structure
+- Suggests optimal organization strategy
+- Identifies project type and patterns
+- Recommends focus areas and detail levels
+
+### 3. `update_memory_bank`
+**Update existing memory banks**
+- Maintains semantic folder organization during updates
+- Incremental updates for active projects
+- Specific file updates with proper categorization
+- Full refresh options for major changes
+
+### 4. `validate_memory_bank`
+**Comprehensive validation with sync checking**
+- Validates memory bank structure and semantic organization
+- Comprehensive sync validation between memory bank and Copilot instructions
+- Identifies orphaned references and missing files
+- Quality assessment with consistency and completeness checking
+
+### 5. `setup_copilot_instructions`
+**Dynamic Copilot integration**
+- Creates/updates `copilot-instructions.md` based on actual memory bank structure
+- Automatically discovers semantic folders and files
+- Real-time status indicators (✅/❌) for core files
+- Sync validation timestamps and folder awareness
 
 ## ✅ How to Verify MCP Server is Working
 

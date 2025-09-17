@@ -55,6 +55,10 @@ cp -r <AZURE_DEVOPS_MCP_PATH>\memory-bank templates/memory-bank-templateelopers 
 3. ✅ **Automatic Copilot Integration**: Creates/updates `copilot-instructions.md` automatically
 4. ✅ **Real File Operations**: Complete file system operations with validation
 5. ✅ **Customization Options**: Standard vs custom structure, focus areas, detail levels
+6. ✅ **Semantic Folder Organization**: Intelligent categorization of additional files into purpose-based folders
+7. ✅ **Dynamic Copilot Integration**: Instructions automatically adapt to actual memory bank structure
+8. ✅ **Comprehensive Validation**: Sync checking between memory bank files and Copilot instructions
+9. ✅ **User-Driven Generation**: Additional files only created when explicitly requested
 
 ---
 
@@ -150,7 +154,49 @@ const implementedTools = [
    - Organizes additional files into semantic folders when generated
 7. **Copilot Integration**: Automatic setup of `copilot-instructions.md`
 
-### 🔄 4. Multi-Source Intelligence (FUTURE ENHANCEMENT)
+### ✅ 4. Dynamic Copilot Integration & Semantic Organization
+**Priority**: Critical  
+**Status**: ✅ COMPLETE  
+**Description**: Implemented intelligent semantic folder organization with dynamic Copilot integration
+
+#### ✅ Completed Implementation
+
+##### Semantic Folder Structure
+- **Core Files at Root**: 6 essential files always generated at memory bank root level
+- **Smart Categorization**: Additional files automatically organized into purpose-based folders
+- **Automatic Folder Creation**: Semantic folders (features/, integrations/, deployment/, api/, testing/, security/, performance/) created on-demand
+- **Pattern-Based Organization**: Files categorized based on content patterns and naming conventions
+- **Custom Folders**: Support for user-defined semantic categories
+- **Flexible Structure**: Choice between semantic organization (default) or flat structure
+
+##### Dynamic Copilot Integration
+- **Structure Discovery**: Automatically scans memory bank to detect files and folders
+- **Adaptive Templates**: Copilot instructions generated based on actual memory bank structure
+- **Real-Time Status**: Shows presence/absence of core files with ✅/❌ indicators
+- **Folder Awareness**: Documents semantic folders with file counts and purposes
+- **Sync Validation**: Comprehensive checking between memory bank files and Copilot instructions
+- **Timestamp Tracking**: Last validation timestamps for sync status
+
+##### Enhanced Validation System with Interactive Conflict Resolution
+- **Structure Compliance**: Validates semantic organization and folder structure
+- **Sync Validation**: Ensures all memory bank files are referenced in Copilot instructions
+- **Orphaned Reference Detection**: Identifies Copilot references without corresponding files
+- **Quality Assessment**: Comprehensive analysis of consistency, completeness, and clarity
+- **Cross-Reference Analysis**: Checks relationships between memory bank files
+- **Interactive Sync Resolution**: When conflicts detected, prompts user for resolution preferences
+- **Conflict Types Handled**:
+  - **Extra Copilot References**: Files listed in copilot-instructions.md but missing from memory bank
+  - **Missing Copilot References**: Files in memory bank but not referenced in copilot-instructions.md
+- **Resolution Options**: Generate missing files, remove extra references, or accept out-of-sync state
+- **Multi-Step Confirmation**: Warns users about sync issues and offers final retry before accepting conflicts
+
+##### User Experience Enhancements
+- **Interactive Organization Choice**: Users can select semantic vs flat organization
+- **Smart File Generation**: Additional files only created when explicitly requested
+- **Category Customization**: Support for project-specific semantic folders
+- **Sync Options**: Optional comprehensive validation during generation and validation
+
+### 🔄 5. Multi-Source Intelligence (FUTURE ENHANCEMENT)
 **Priority**: Medium  
 **Status**: PLANNED  
 **Description**: Currently uses interactive user input; future versions will add automated analysis
@@ -161,7 +207,7 @@ const implementedTools = [
 - **Documentation**: README files, code comments, documentation sites
 - **Project Metadata**: Package.json, requirements.txt, configuration files
 
-### ✅ 5. GitHub Copilot Integration
+### ✅ 6. GitHub Copilot Integration
 **Priority**: High  
 **Status**: COMPLETE  
 **Description**: Automatic setup and configuration for GitHub Copilot workflows
@@ -215,8 +261,12 @@ const implementedTools = [
   },
   {
     name: "validate_memory_bank",
-    description: "Validate existing memory bank structure and completeness",
-    schema: { projectRootPath: string }
+    description: "Validate existing memory bank structure and completeness with interactive sync conflict resolution",
+    schema: { 
+      projectRootPath: string,
+      interactiveSync?: boolean,  // Enable interactive conflict resolution (default: true)
+      autoResolve?: 'generate'|'update'|'remove'|'skip'  // Optional auto-resolution strategy
+    }
   },
   {
     name: "setup_copilot_instructions",
@@ -546,7 +596,42 @@ src/
 └── copilot-instructions.md      // Automatic Copilot configuration
 ```
 
-### 🔄 Phase 2: Enhanced Intelligence (NEXT STEPS)
+### ✅ Phase 2: Dynamic Intelligence & Semantic Organization
+**Timeline**: ✅ COMPLETED  
+**Status**: ✅ COMPLETE  
+**Scope**: ✅ IMPLEMENTED semantic folder organization with dynamic Copilot integration
+
+#### ✅ Completed Features
+- ✅ **Semantic Folder Organization**: Smart categorization of files into purpose-based folders
+- ✅ **Dynamic Copilot Integration**: Instructions automatically adapt to memory bank structure
+- ✅ **Comprehensive Validation**: Sync checking between memory bank and Copilot instructions
+- ✅ **Custom Folder Support**: User-defined semantic categories for project-specific needs
+- ✅ **Structure Flexibility**: Choice between semantic organization and flat structure
+- ✅ **Real-Time Discovery**: Automatic detection of memory bank files and folders
+- ✅ **Enhanced User Experience**: Interactive organization choices with smart defaults
+
+#### ✅ Technical Implementation
+```typescript
+// ✅ COMPLETED architecture expansion
+src/
+├── index.ts              // ✅ Enhanced: 5 MCP tools with semantic organization
+├── fileOperations.ts     // ✅ Enhanced: Semantic categorization, dynamic Copilot integration
+│   ├── generateMemoryBankFiles()        // ✅ Smart folder organization
+│   ├── setupCopilotInstructions()      // ✅ Dynamic template generation
+│   ├── validateMemoryBank()            // ✅ Comprehensive sync validation
+│   ├── organizeAdditionalFilesSemanticaly() // ✅ Pattern-based categorization
+│   └── discoverMemoryBankStructure()   // ✅ Real-time structure discovery
+
+// ✅ Enhanced interfaces and types
+├── MemoryBankOptions                    // ✅ Semantic organization options
+├── CustomFolderConfig                   // ✅ User-defined folders
+├── SemanticFolderInfo                   // ✅ Folder metadata
+├── CopilotSyncValidation               // ✅ Sync validation
+└── ValidationResult                     // ✅ Structure compliance
+```
+
+### 🔄 Phase 3: Automated Intelligence (NEXT STEPS)
+
 **Timeline**: 1-2 months  
 **Status**: PLANNED  
 **Scope**: Add automated project analysis to complement interactive workflow
@@ -555,29 +640,34 @@ src/
 - **Automated Code Analysis**: AST parsing and pattern detection
 - **Multi-Language Support**: Python, Java, C#, Go projects beyond JavaScript/TypeScript
 - **Git History Integration**: Extract insights from commit history and branch patterns
-- **Enhanced Validation**: Advanced content quality assessment
-- **Template Customization**: Industry-specific memory bank templates
+- **Advanced Content Generation**: AI-powered content creation for memory bank files
+- **Template Customization**: Industry-specific and framework-specific memory bank templates
+- **Cross-Project Intelligence**: Learn patterns across multiple projects
 
 #### Technical Enhancements
 ```typescript
 // Planned architecture expansion
 src/
-├── index.ts              // ✅ Current: Interactive MCP server
-├── fileOperations.ts     // ✅ Current: File system operations
+├── index.ts              // ✅ Current: Interactive MCP server with semantic organization
+├── fileOperations.ts     // ✅ Current: Enhanced file operations with dynamic integration
 ├── analysis/             // 🔄 Planned: Automated analysis engine
 │   ├── codeAnalyzer.ts   //     AST parsing and pattern detection
 │   ├── gitAnalyzer.ts    //     Git history and branch analysis
+│   ├── contentGenerator.ts //   AI-powered content generation
 │   └── projectAnalyzer.ts//     Project structure analysis
 ├── templates/            // 🔄 Planned: Template management
 │   ├── standard.ts       //     Standard memory bank templates
-│   ├── framework/        //     Framework-specific templates
-│   └── industry/         //     Industry-specific templates
+│   ├── framework/        //     Framework-specific templates (React, Vue, Angular, etc.)
+│   └── industry/         //     Industry-specific templates (fintech, healthcare, etc.)
 └── integrations/         // 🔄 Planned: External MCP integrations
     ├── github.ts         //     GitHub MCP server integration
-    └── azureDevOps.ts    //     Azure DevOps MCP integration
+    ├── azureDevOps.ts    //     Azure DevOps MCP integration
+    └── aiServices.ts     //     AI content generation services
 ```
 
-### 🚀 Phase 3: Enterprise Features (FUTURE)
+### 🚀 Phase 4: Enterprise Features (FUTURE)
+
+### 🚀 Phase 4: Enterprise Features (FUTURE)
 **Timeline**: 3-6 months  
 **Status**: PLANNED  
 **Scope**: Enterprise-grade features and team collaboration
@@ -588,10 +678,82 @@ src/
 - **Custom Integration Framework**: Plugin system for proprietary tools
 - **Analytics and Reporting**: Memory bank usage and effectiveness metrics
 - **Enterprise Deployment**: Docker containers, cloud deployment options
+- **Multi-Project Dashboards**: Centralized management for multiple projects
+- **Automated Quality Gates**: Continuous validation and improvement suggestions
 
-## DETAILED NEXT STEPS
+## DETAILED NEXT STEPS FOR PHASE 3
 
-### Critical Implementation Requirements
+### Priority 1: Automated Code Analysis
+**Estimated Timeline**: 2-3 weeks
+
+#### Implementation Plan
+1. **AST Parser Integration**
+   - Add support for TypeScript, JavaScript, Python, Java parsing
+   - Extract function signatures, class definitions, interface patterns
+   - Identify architectural patterns and design decisions
+
+2. **Dependency Analysis**
+   - Map project dependencies and their purposes
+   - Identify key external libraries and frameworks
+   - Document integration patterns and usage
+
+3. **Pattern Recognition**
+   - Detect common design patterns (MVC, Repository, Factory, etc.)
+   - Identify API patterns (REST, GraphQL, gRPC)
+   - Recognize testing patterns and strategies
+
+#### Expected Outcomes
+- Automatically populate `systemPatterns.md` with detected patterns
+- Enhanced `techContext.md` with dependency analysis
+- Smart suggestions for additional semantic folders based on project structure
+
+### Priority 2: Git History Intelligence
+**Estimated Timeline**: 2-3 weeks
+
+#### Implementation Plan
+1. **Commit Analysis**
+   - Extract patterns from commit messages
+   - Identify frequent contributors and their areas of expertise
+   - Map evolution of key files and components
+
+2. **Branch Strategy Detection**
+   - Analyze branching patterns (GitFlow, GitHub Flow, etc.)
+   - Document release and deployment patterns
+   - Identify code review and collaboration practices
+
+3. **Change Impact Analysis**
+   - Track which files change together frequently
+   - Identify hotspots and areas of high activity
+   - Document refactoring patterns and technical debt
+
+#### Expected Outcomes
+- Enhanced `progress.md` with historical context
+- Improved `activeContext.md` with recent change analysis
+- Automatic detection of deployment and integration patterns
+
+### Priority 3: Content Generation Enhancement
+**Estimated Timeline**: 3-4 weeks
+
+#### Implementation Plan
+1. **AI-Powered Content**
+   - Integrate with language models for content generation
+   - Create contextual descriptions based on code analysis
+   - Generate documentation from inline comments and README files
+
+2. **Framework-Specific Templates**
+   - React/Vue/Angular specific memory bank structures
+   - Backend framework templates (Express, Spring, Django, etc.)
+   - Database and infrastructure pattern templates
+
+3. **Industry Templates**
+   - Financial services compliance and security patterns
+   - Healthcare HIPAA and regulatory considerations
+   - E-commerce scalability and performance patterns
+
+#### Expected Outcomes
+- Significantly improved content quality in generated files
+- Framework and industry-specific memory bank structures
+- Reduced manual effort in customizing memory banks
 
 #### Dynamic Copilot Integration
 **Priority**: High - Immediate Implementation Required
@@ -640,7 +802,7 @@ src/
 #### Technical Implementation Details
 
 ```typescript
-// New validation interface with semantic folder support
+// Enhanced validation interface with interactive sync conflict resolution
 interface CopilotSyncValidation {
   memoryBankFiles: string[];           // Files found in .github/memory-bank/ (including nested)
   copilotReferences: string[];         // Files referenced in copilot-instructions.md
@@ -648,6 +810,47 @@ interface CopilotSyncValidation {
   extraReferences: string[];           // Copilot references not in memory bank
   isFullySynced: boolean;              // True if all files properly referenced
   semanticFolders: SemanticFolderInfo[]; // Information about semantic folder organization
+  conflicts: SyncConflict[];           // Detected sync conflicts requiring resolution
+  resolutionOptions: ResolutionOption[]; // Available resolution strategies
+}
+
+// Sync conflict details
+interface SyncConflict {
+  type: 'extra_copilot_reference' | 'missing_copilot_reference';
+  affectedFiles: string[];             // Files involved in the conflict
+  description: string;                 // Human-readable description of the conflict
+  severity: 'warning' | 'error';       // Impact level of the conflict
+}
+
+// Resolution options for sync conflicts
+interface ResolutionOption {
+  action: 'generate_files' | 'update_copilot' | 'remove_files' | 'remove_references';
+  description: string;                 // User-friendly description
+  affectedFiles: string[];             // Files that will be affected
+  consequences: string[];              // What will happen if this option is chosen
+}
+
+// Enhanced sync resolution result
+interface SyncResolutionResult {
+  conflictsResolved: boolean;          // Whether all conflicts were resolved
+  actionsTaken: SyncAction[];          // Actions performed to resolve conflicts
+  remainingConflicts: SyncConflict[];  // Any unresolved conflicts
+  finalSyncStatus: boolean;            // Final sync state after resolution
+  userChoices: UserResolutionChoice[]; // Record of user decisions
+}
+
+interface SyncAction {
+  type: 'file_generated' | 'file_removed' | 'copilot_updated' | 'reference_removed';
+  targetFiles: string[];               // Files affected by this action
+  timestamp: string;                   // When the action was performed
+  success: boolean;                    // Whether the action completed successfully
+}
+
+interface UserResolutionChoice {
+  conflictType: string;                // Type of conflict presented to user
+  userDecision: string;                // User's choice (yes/no/skip)
+  retryAttempted: boolean;             // Whether final retry was offered
+  finalDecision: string;               // Final decision after any retries
 }
 
 // Semantic folder organization
@@ -675,17 +878,20 @@ interface CustomFolderConfig {
   filePatterns: string[];              // Files that should go in this folder
 }
 
-// Enhanced validation result
+// Enhanced validation result with interactive conflict resolution
 interface ValidationResult {
   isValid: boolean;
   missingFiles: string[];
   quality: QualityMetrics;
-  copilotSync: CopilotSyncValidation;  // Enhanced sync validation with semantic folders
-  structureCompliance: {               // New: Semantic structure validation
+  copilotSync: CopilotSyncValidation;  // Enhanced sync validation with conflict resolution
+  structureCompliance: {               // Semantic structure validation
     coreFilesAtRoot: boolean;
     properFolderOrganization: boolean;
     semanticConsistency: boolean;
   };
+  syncResolution?: SyncResolutionResult; // Results of interactive conflict resolution (if performed)
+  interactiveMode: boolean;             // Whether interactive resolution was enabled
+  requiresUserIntervention: boolean;    // Whether unresolved conflicts need user attention
 }
 ```
 
@@ -698,6 +904,55 @@ interface ValidationResult {
 - `api/` - API documentation, endpoints, and interface specifications
 - `performance/` - Performance optimization, monitoring, and benchmarks
 - `[custom]/` - User-defined semantic categories based on project needs
+
+### Interactive Sync Conflict Resolution Workflow
+
+When `validate_memory_bank` detects conflicts between memory bank files and `copilot-instructions.md`, it now provides interactive resolution options:
+
+#### Conflict Detection & Resolution Process
+
+1. **Automatic Conflict Detection**
+   - Compare files in `.github/memory-bank/` with references in `copilot-instructions.md`
+   - Identify two types of conflicts:
+     - **Extra Copilot References**: Files referenced in `copilot-instructions.md` but missing from memory bank
+     - **Missing Copilot References**: Files in memory bank but not referenced in `copilot-instructions.md`
+
+2. **Interactive Resolution for Extra Copilot References**
+   ```
+   ❌ Conflict: copilot-instructions.md references files not in memory bank:
+   - features/user-authentication.md
+   - deployment/docker-setup.md
+   
+   ❓ Would you like to generate these missing files in the memory bank? (yes/no)
+   → If yes: Generate missing files with appropriate content
+   → If no: Ask "Remove these references from copilot-instructions.md?" (yes/no)
+   ```
+
+3. **Interactive Resolution for Missing Copilot References**
+   ```
+   ❌ Conflict: Memory bank contains files not referenced in copilot-instructions.md:
+   - integrations/stripe-api.md
+   - security/auth-patterns.md
+   
+   ❓ Would you like to keep these additional memory bank files? (yes/no)
+   → If yes: Update copilot-instructions.md to include references
+   → If no: Ask "Remove these files from the memory bank?" (yes/no)
+   ```
+
+4. **Final Sync Warning & Retry**
+   - If user choices result in out-of-sync state, warn about future problems
+   - Offer one final retry opportunity to achieve synchronization
+   - Only accept out-of-sync state after user explicitly confirms twice
+
+#### Resolution Options
+
+- **`interactiveSync: true`** (default): Enable full interactive resolution workflow
+- **`interactiveSync: false`**: Report conflicts without resolution prompts
+- **`autoResolve`** parameter: Skip interaction and auto-apply strategy
+  - `'generate'`: Always generate missing files
+  - `'update'`: Always update copilot-instructions.md
+  - `'remove'`: Always remove conflicting files/references
+  - `'skip'`: Report conflicts but don't resolve
 
 ### Immediate Actions (Next 1-2 weeks)
 1. **Enhanced Project Analysis**
