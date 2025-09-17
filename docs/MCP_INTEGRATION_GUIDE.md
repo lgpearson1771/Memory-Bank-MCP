@@ -88,7 +88,7 @@ The Memory Bank Generator MCP Server provides 5 interactive tools for creating a
 
 ## 🛠️ Available MCP Tools
 
-Once configured, you'll have access to these 5 interactive tools:
+Once configured, you'll have access to these **6** interactive tools:
 
 ### 1. `generate_memory_bank`
 **Interactive memory bank generation with semantic organization**
@@ -124,8 +124,29 @@ Result: Core files + semantic folders (features/, integrations/, etc.) if reques
 - Comprehensive sync validation between memory bank and Copilot instructions
 - Identifies orphaned references and missing files
 - Quality assessment with consistency and completeness checking
+- Interactive mode for detailed conflict analysis
 
-### 5. `setup_copilot_instructions`
+### 5. `resolve_sync_conflicts`
+**🆕 Interactive sync conflict resolution**
+- **Conversational workflow** for resolving sync conflicts between memory bank and Copilot instructions
+- **Multi-step user interaction** with detailed conflict analysis and impact assessment
+- **Auto-resolution options** for low-risk conflicts that can be safely fixed automatically
+- **Manual review mode** with per-conflict confirmation for high-impact changes
+- **Complete audit trail** of user choices, actions taken, and conversation log
+- **Final validation** and status reporting after resolution attempts
+
+**Example Conversational Flow:**
+```
+Tool: "🔍 Sync Conflict Analysis - 3 unreferenced files detected (medium severity)"
+Tool: "How would you like to resolve these conflicts?"
+User: "Review each conflict individually"
+Tool: "Conflict 1/3: features/authentication.md not referenced in Copilot instructions"
+Tool: "Would you like to add this reference?"
+User: "Yes - Apply this fix"
+Tool: "✅ Reference added. Moving to next conflict..."
+```
+
+### 6. `setup_copilot_instructions`
 **Dynamic Copilot integration**
 - Creates/updates `copilot-instructions.md` based on actual memory bank structure
 - Automatically discovers semantic folders and files
@@ -193,7 +214,7 @@ node scripts/test-server.js
 When working correctly, you should see:
 
 1. **In AI Assistant:**
-   - 6 new tools available: analyze_project, generate_memory_bank, etc.
+   - 6 new tools available: analyze_project, generate_memory_bank, resolve_sync_conflicts, etc.
    - Tool descriptions and parameters
    - Ability to call tools and get responses
 

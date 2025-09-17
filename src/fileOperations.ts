@@ -14,6 +14,7 @@ export interface MemoryBankOptions {
   customFolders?: CustomFolderConfig[];    // User-defined semantic folders
   generateOnlyRequested?: boolean;         // Only generate files explicitly requested by user
   syncValidation?: boolean;                // Enable sync validation with Copilot instructions
+  interactiveMode?: boolean;               // Enable conversational conflict resolution
 }
 
 export interface CustomFolderConfig {
@@ -36,6 +37,105 @@ export interface CopilotSyncValidation {
   orphanedReferences: string[];           // Copilot references not in memory bank
   isInSync: boolean;                      // True if all files properly referenced
   lastValidated: string;                  // ISO timestamp of last validation
+  conflictDetails?: SyncConflictDetails;  // Detailed conflict information for interactive resolution
+}
+
+export interface SyncConflictDetails {
+  conflictType: 'missing-references' | 'orphaned-references' | 'both' | 'structure-mismatch';
+  severity: 'low' | 'medium' | 'high';
+  missingFiles: FileConflictInfo[];
+  orphanedFiles: FileConflictInfo[];
+  suggestedActions: ConflictAction[];
+  autoResolvable: boolean;
+}
+
+export interface FileConflictInfo {
+  fileName: string;
+  filePath: string;
+  description: string;
+  impact: 'low' | 'medium' | 'high';
+  suggestedAction: string;
+}
+
+export interface ConflictAction {
+  actionType: 'add-reference' | 'remove-reference' | 'delete-file' | 'create-file' | 'update-structure';
+  description: string;
+  targetFile: string;
+  details: string;
+  requiresConfirmation: boolean;
+}
+
+export interface InteractiveResolutionResult {
+  resolved: boolean;
+  actionsPerformed: ConflictAction[];
+  userChoices: UserChoice[];
+  finalState: CopilotSyncValidation;
+  conversationLog: ConversationStep[];
+}
+
+export interface UserChoice {
+  question: string;
+  answer: string;
+  selectedAction?: ConflictAction;
+}
+
+export interface ConversationStep {
+  step: number;
+  type: 'question' | 'information' | 'confirmation' | 'warning' | 'result';
+  content: string;
+  options?: string[];
+  userResponse?: string;
+  timestamp: string;
+}
+
+// New conversational workflow interfaces
+export interface ConversationalResponse {
+  requiresUserInput: boolean;
+  status: 'analysis_complete' | 'awaiting_user_input' | 'ready_to_proceed' | 'completed' | 'error';
+  conversation: ConversationPrompt;
+  nextSteps: NextStepGuidance[];
+  recommendations: AnalysisRecommendations;
+  toolToCallNext?: string;
+  suggestedParameters?: any;
+}
+
+export interface ConversationPrompt {
+  message: string;
+  options: string[];
+  reasoning: string;
+  consequences: string[];
+  defaultChoice?: string;
+  priority: 'low' | 'medium' | 'high';
+}
+
+export interface NextStepGuidance {
+  action: string;
+  description: string;
+  toolName?: string;
+  parameters?: any;
+  optional: boolean;
+}
+
+export interface AnalysisRecommendations {
+  projectType: string;
+  suggestedStructure: 'standard' | 'enhanced' | 'custom';
+  recommendedFocusAreas: string[];
+  additionalFilesRecommended: {
+    category: string;
+    files: string[];
+    reasoning: string;
+  }[];
+  confidence: 'low' | 'medium' | 'high';
+}
+
+export interface ConversationalResponse {
+  requiresUserInput: boolean;
+  status: 'analysis_complete' | 'awaiting_user_input' | 'ready_to_proceed' | 'completed' | 'error';
+  conversation: ConversationPrompt;
+  nextSteps: NextStepGuidance[];
+  recommendations: AnalysisRecommendations;
+  toolToCallNext?: string;
+  suggestedParameters?: any;
 }
 
 export interface ValidationResult {
@@ -59,12 +159,32 @@ export interface ValidationResult {
 
 export interface ProjectAnalysis {
   projectType: string;
+  projectName: string;
+  description: string;
+  version: string;
   structure: {
     rootFiles: string[];
     directories: string[];
     keyPatterns: string[];
     complexity: 'Low' | 'Medium' | 'High';
     estimatedFiles: number;
+    sourceFiles: {
+      typescript: string[];
+      javascript: string[];
+      python: string[];
+      other: string[];
+    };
+  };
+  dependencies: {
+    runtime: Record<string, string>;
+    development: Record<string, string>;
+    scripts: Record<string, string>;
+  };
+  frameworks: string[];
+  architecture: {
+    patterns: string[];
+    entryPoints: string[];
+    configFiles: string[];
   };
   recommendations: {
     focusAreas: string[];
@@ -109,6 +229,31 @@ export async function analyzeProject(projectRoot: string, depth: 'shallow' | 'me
     const packageJsonExists = rootFiles.includes('package.json');
     const tsconfigExists = rootFiles.includes('tsconfig.json');
     
+    // Read package.json for detailed project info
+    let packageInfo: any = {};
+    let projectName = 'Unknown Project';
+    let description = 'No description available';
+    let version = '0.0.0';
+    let dependencies = { runtime: {}, development: {}, scripts: {} };
+    
+    if (packageJsonExists) {
+      try {
+        const packagePath = path.join(projectRoot, 'package.json');
+        const packageContent = await fs.readFile(packagePath, 'utf8');
+        packageInfo = JSON.parse(packageContent);
+        projectName = packageInfo.name || projectName;
+        description = packageInfo.description || description;
+        version = packageInfo.version || version;
+        dependencies = {
+          runtime: packageInfo.dependencies || {},
+          development: packageInfo.devDependencies || {},
+          scripts: packageInfo.scripts || {}
+        };
+      } catch (error) {
+        console.warn('Failed to parse package.json:', error);
+      }
+    }
+    
     let projectType = 'Unknown Project';
     if (packageJsonExists && tsconfigExists) {
       projectType = 'TypeScript/Node.js Project';
@@ -120,19 +265,33 @@ export async function analyzeProject(projectRoot: string, depth: 'shallow' | 'me
       projectType = 'Java Project';
     }
     
+    // Enhanced file scanning
+    const sourceFiles = await scanSourceFiles(projectRoot, depth);
+    
     // Estimate project complexity
     const fileCount = await countFiles(projectRoot, depth === 'shallow' ? 1 : depth === 'medium' ? 3 : 10);
     const complexity = fileCount < 20 ? 'Low' : fileCount < 100 ? 'Medium' : 'High';
     
+    // Detect frameworks and architectural patterns
+    const frameworks = detectFrameworks(rootFiles, dependencies.runtime);
+    const architecture = analyzeArchitecture(rootFiles, sourceFiles, packageInfo);
+    
     return {
       projectType,
+      projectName,
+      description,
+      version,
       structure: {
         rootFiles: rootFiles.filter(f => !f.startsWith('.')),
         directories: rootFiles.filter(f => f.endsWith('/') || !f.includes('.')),
         keyPatterns: detectPatterns(rootFiles),
         complexity,
         estimatedFiles: fileCount,
+        sourceFiles,
       },
+      dependencies,
+      frameworks,
+      architecture,
       recommendations: {
         focusAreas: getRecommendedFocusAreas(projectType, rootFiles),
         detailLevel: complexity === 'High' ? 'detailed' : 'granular',
@@ -583,7 +742,7 @@ REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is
  */
 export async function validateMemoryBank(
   memoryBankDir: string,
-  options?: { syncValidation?: boolean; projectRoot?: string }
+  options?: { syncValidation?: boolean; projectRoot?: string; interactiveMode?: boolean }
 ): Promise<ValidationResult> {
   const requiredFiles = [
     'projectbrief.md',
@@ -648,7 +807,11 @@ export async function validateMemoryBank(
     
     // Sync validation if requested
     if (options?.syncValidation && options?.projectRoot) {
-      result.copilotSync = await validateCopilotSync(memoryBankDir, options.projectRoot);
+      result.copilotSync = await validateCopilotSync(
+        memoryBankDir, 
+        options.projectRoot, 
+        options.interactiveMode || false
+      );
     }
     
     return result;
@@ -664,7 +827,8 @@ export async function validateMemoryBank(
  */
 async function validateCopilotSync(
   memoryBankDir: string,
-  projectRoot: string
+  projectRoot: string,
+  interactiveMode: boolean = false
 ): Promise<CopilotSyncValidation> {
   const copilotPath = path.join(projectRoot, '.github', 'copilot-instructions.md');
   
@@ -680,29 +844,62 @@ async function validateCopilotSync(
     const copilotContent = await fs.readFile(copilotPath, 'utf8');
     copilotReferences = extractFileReferences(copilotContent);
     
-    // Find files not referenced in Copilot instructions
-    unreferencedFiles = memoryBankFiles.filter(file => 
-      !copilotReferences.some(ref => ref.includes(file))
-    );
+    // Find files not referenced in Copilot instructions (compare by filename only)
+    unreferencedFiles = memoryBankFiles.filter(file => {
+      const fileName = path.basename(file);
+      return !copilotReferences.some(ref => {
+        const refFileName = path.basename(ref);
+        return fileName === refFileName;
+      });
+    });
     
-    // Find references that don't have corresponding files
-    orphanedReferences = copilotReferences.filter(ref =>
-      !memoryBankFiles.some(file => ref.includes(file))
-    );
+    // Find references that don't have corresponding files (compare by filename only)
+    orphanedReferences = copilotReferences.filter(ref => {
+      // Skip copilot-instructions.md itself as it's not a memory bank file
+      if (path.basename(ref) === 'copilot-instructions.md') {
+        return false;
+      }
+      const refFileName = path.basename(ref);
+      return !memoryBankFiles.some(file => {
+        const fileName = path.basename(file);
+        return fileName === refFileName;
+      });
+    });
     
   } catch (error) {
     // Copilot instructions file doesn't exist
     unreferencedFiles = memoryBankFiles;
   }
   
-  return {
+  const isInSync = unreferencedFiles.length === 0 && orphanedReferences.length === 0;
+  
+  // Generate conflict details if there are sync issues and interactive mode is enabled
+  let conflictDetails: SyncConflictDetails | undefined;
+  if (!isInSync && interactiveMode) {
+    conflictDetails = await generateConflictDetails(
+      memoryBankFiles,
+      copilotReferences,
+      unreferencedFiles,
+      orphanedReferences,
+      memoryBankDir,
+      copilotPath
+    );
+  }
+  
+  const result: CopilotSyncValidation = {
     memoryBankFiles,
     copilotReferences,
     missingReferences: unreferencedFiles,
     orphanedReferences,
-    isInSync: unreferencedFiles.length === 0 && orphanedReferences.length === 0,
+    isInSync,
     lastValidated: new Date().toISOString()
   };
+  
+  if (conflictDetails) {
+    result.conflictDetails = conflictDetails;
+  }
+  
+  return result;
 }
 
 /**
@@ -732,8 +929,124 @@ async function discoverAllMemoryBankFiles(memoryBankDir: string): Promise<string
 }
 
 /**
- * Extract file references from Copilot instructions content
+ * Generate detailed conflict analysis for interactive resolution
  */
+async function generateConflictDetails(
+  _memoryBankFiles: string[],
+  _copilotReferences: string[],
+  unreferencedFiles: string[],
+  orphanedReferences: string[],
+  _memoryBankDir: string,
+  _copilotPath: string
+): Promise<SyncConflictDetails> {
+  const missingFiles: FileConflictInfo[] = [];
+  const orphanedFiles: FileConflictInfo[] = [];
+  const suggestedActions: ConflictAction[] = [];
+  
+  // Analyze unreferenced files
+  for (const file of unreferencedFiles) {
+    const filePath = file.includes('/') ? 
+      path.join(_memoryBankDir, file) : 
+      path.join(_memoryBankDir, file);
+    
+    let description = 'Memory bank file not referenced in Copilot instructions';
+    let impact: 'low' | 'medium' | 'high' = 'medium';
+    
+    // Determine impact based on file type
+    const coreFiles = ['projectbrief.md', 'productContext.md', 'activeContext.md', 'systemPatterns.md', 'techContext.md', 'progress.md'];
+    if (coreFiles.includes(file)) {
+      impact = 'high';
+      description = 'Core memory bank file missing from Copilot instructions - critical for AI understanding';
+    } else if (file.includes('/')) {
+      impact = 'low';
+      description = 'Additional context file in semantic folder not referenced';
+    }
+    
+    missingFiles.push({
+      fileName: file,
+      filePath,
+      description,
+      impact,
+      suggestedAction: 'Add reference to copilot-instructions.md'
+    });
+    
+    // Create suggested action
+    suggestedActions.push({
+      actionType: 'add-reference',
+      description: `Add reference to ${file} in Copilot instructions`,
+      targetFile: 'copilot-instructions.md',
+      details: `Update the Memory Bank Structure section to include ${file}`,
+      requiresConfirmation: impact === 'high'
+    });
+  }
+  
+  // Analyze orphaned references
+  for (const ref of orphanedReferences) {
+    orphanedFiles.push({
+      fileName: ref,
+      filePath: `Referenced but not found: ${ref}`,
+      description: 'File referenced in Copilot instructions but missing from memory bank',
+      impact: 'medium',
+      suggestedAction: 'Remove reference or create missing file'
+    });
+    
+    // Create suggested actions
+    suggestedActions.push({
+      actionType: 'remove-reference',
+      description: `Remove obsolete reference to ${ref}`,
+      targetFile: 'copilot-instructions.md',
+      details: `Remove reference to ${ref} since the file no longer exists`,
+      requiresConfirmation: true
+    });
+    
+    suggestedActions.push({
+      actionType: 'create-file',
+      description: `Create missing file ${ref}`,
+      targetFile: ref,
+      details: `Generate ${ref} to match the reference in Copilot instructions`,
+      requiresConfirmation: true
+    });
+  }
+  
+  // Determine conflict type and severity
+  let conflictType: 'missing-references' | 'orphaned-references' | 'both' | 'structure-mismatch';
+  if (unreferencedFiles.length > 0 && orphanedReferences.length > 0) {
+    conflictType = 'both';
+  } else if (unreferencedFiles.length > 0) {
+    conflictType = 'missing-references';
+  } else if (orphanedReferences.length > 0) {
+    conflictType = 'orphaned-references';
+  } else {
+    conflictType = 'structure-mismatch';
+  }
+  
+  // Determine severity
+  const highImpactCount = missingFiles.filter(f => f.impact === 'high').length;
+  const totalIssues = unreferencedFiles.length + orphanedReferences.length;
+  
+  let severity: 'low' | 'medium' | 'high';
+  if (highImpactCount > 0 || totalIssues > 5) {
+    severity = 'high';
+  } else if (totalIssues > 2) {
+    severity = 'medium';
+  } else {
+    severity = 'low';
+  }
+  
+  // Determine if auto-resolvable
+  const autoResolvable = severity === 'low' && 
+                        orphanedReferences.length === 0 && 
+                        unreferencedFiles.every(f => !['projectbrief.md', 'activeContext.md'].includes(f));
+  
+  return {
+    conflictType,
+    severity,
+    missingFiles,
+    orphanedFiles,
+    suggestedActions,
+    autoResolvable
+  };
+}
 function extractFileReferences(content: string): string[] {
   const references: string[] = [];
   
@@ -853,6 +1166,124 @@ async function countFiles(dir: string, maxDepth: number, currentDepth = 0): Prom
   }
 }
 
+async function scanSourceFiles(projectRoot: string, depth: 'shallow' | 'medium' | 'deep'): Promise<{
+  typescript: string[];
+  javascript: string[];
+  python: string[];
+  other: string[];
+}> {
+  const maxDepth = depth === 'shallow' ? 2 : depth === 'medium' ? 4 : 6;
+  const sourceFiles = {
+    typescript: [] as string[],
+    javascript: [] as string[],
+    python: [] as string[],
+    other: [] as string[]
+  };
+  
+  const scanDirectory = async (dir: string, currentDepth = 0) => {
+    if (currentDepth >= maxDepth) return;
+    
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+        
+        const fullPath = path.join(dir, entry.name);
+        const relativePath = path.relative(projectRoot, fullPath);
+        
+        if (entry.isFile()) {
+          if (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx')) {
+            sourceFiles.typescript.push(relativePath);
+          } else if (entry.name.endsWith('.js') || entry.name.endsWith('.jsx')) {
+            sourceFiles.javascript.push(relativePath);
+          } else if (entry.name.endsWith('.py')) {
+            sourceFiles.python.push(relativePath);
+          } else if (['.java', '.cs', '.cpp', '.c', '.h', '.go', '.rs', '.rb', '.php'].some(ext => entry.name.endsWith(ext))) {
+            sourceFiles.other.push(relativePath);
+          }
+        } else if (entry.isDirectory()) {
+          await scanDirectory(fullPath, currentDepth + 1);
+        }
+      }
+    } catch {
+      // Ignore errors and continue
+    }
+  };
+  
+  await scanDirectory(projectRoot);
+  return sourceFiles;
+}
+
+function detectFrameworks(rootFiles: string[], dependencies: Record<string, string>): string[] {
+  const frameworks: string[] = [];
+  
+  // Check package.json dependencies
+  const depNames = Object.keys(dependencies);
+  
+  if (depNames.includes('react')) frameworks.push('React');
+  if (depNames.includes('vue')) frameworks.push('Vue.js');
+  if (depNames.includes('angular')) frameworks.push('Angular');
+  if (depNames.includes('next')) frameworks.push('Next.js');
+  if (depNames.includes('express')) frameworks.push('Express.js');
+  if (depNames.includes('fastify')) frameworks.push('Fastify');
+  if (depNames.includes('@nestjs/core')) frameworks.push('NestJS');
+  if (depNames.includes('jest')) frameworks.push('Jest');
+  if (depNames.includes('vitest')) frameworks.push('Vitest');
+  if (depNames.includes('prisma')) frameworks.push('Prisma');
+  if (depNames.includes('mongoose')) frameworks.push('Mongoose');
+  
+  // Check config files
+  if (rootFiles.includes('next.config.js')) frameworks.push('Next.js');
+  if (rootFiles.includes('vite.config.ts') || rootFiles.includes('vite.config.js')) frameworks.push('Vite');
+  if (rootFiles.includes('webpack.config.js')) frameworks.push('Webpack');
+  if (rootFiles.includes('docker-compose.yml')) frameworks.push('Docker Compose');
+  
+  return [...new Set(frameworks)]; // Remove duplicates
+}
+
+function analyzeArchitecture(rootFiles: string[], sourceFiles: any, packageInfo: any): {
+  patterns: string[];
+  entryPoints: string[];
+  configFiles: string[];
+} {
+  const patterns: string[] = [];
+  const entryPoints: string[] = [];
+  const configFiles: string[] = [];
+  
+  // Detect architectural patterns
+  if (rootFiles.includes('src')) patterns.push('Source Directory Structure');
+  if (rootFiles.includes('lib') || rootFiles.includes('dist')) patterns.push('Build Output Structure');
+  if (rootFiles.includes('tests') || rootFiles.includes('test') || rootFiles.includes('__tests__')) patterns.push('Test-Driven Development');
+  if (rootFiles.includes('docs')) patterns.push('Documentation-First Approach');
+  
+  // Entry points
+  if (packageInfo.main) entryPoints.push(packageInfo.main);
+  if (packageInfo.module) entryPoints.push(packageInfo.module);
+  if (packageInfo.types) entryPoints.push(packageInfo.types);
+  
+  // Common entry points
+  if (sourceFiles.typescript.includes('src/index.ts')) entryPoints.push('src/index.ts');
+  if (sourceFiles.javascript.includes('src/index.js')) entryPoints.push('src/index.js');
+  if (sourceFiles.typescript.includes('index.ts')) entryPoints.push('index.ts');
+  if (sourceFiles.javascript.includes('index.js')) entryPoints.push('index.js');
+  
+  // Config files
+  const configPatterns = [
+    'tsconfig.json', 'jsconfig.json', 'package.json', 'webpack.config.js', 
+    'vite.config.ts', 'jest.config.js', 'eslint.config.js', '.eslintrc.json',
+    'prettier.config.js', '.prettierrc', 'docker-compose.yml', 'Dockerfile'
+  ];
+  
+  configFiles.push(...rootFiles.filter(file => configPatterns.includes(file)));
+  
+  return {
+    patterns: [...new Set(patterns)],
+    entryPoints: [...new Set(entryPoints)],
+    configFiles: [...new Set(configFiles)]
+  };
+}
+
 function detectPatterns(files: string[]): string[] {
   const patterns: string[] = [];
   
@@ -910,40 +1341,68 @@ async function generateFileContent(
       return `# Project Brief
 
 ## Project Overview
-${analysis.projectType} with ${options.detailLevel} analysis approach.
+**${analysis.projectName}** (v${analysis.version})
+${analysis.description}
 
-## Core Requirements
-- Project complexity: ${analysis.structure.complexity}
-- Estimated files: ${analysis.structure.estimatedFiles}
-- Key technologies: ${analysis.structure.keyPatterns.join(', ')}
+**Project Type:** ${analysis.projectType}
+**Complexity:** ${analysis.structure.complexity}
+**Total Files:** ${analysis.structure.estimatedFiles}
+
+## Technology Stack
+${analysis.frameworks.length > 0 ? 
+  `### Frameworks & Libraries\n${analysis.frameworks.map(fw => `- ${fw}`).join('\n')}\n` : 
+  '### Core Technologies\n'}
+${analysis.structure.keyPatterns.map(pattern => `- ${pattern}`).join('\n')}
+
+## Project Structure
+- **Source Files:** ${Object.values(analysis.structure.sourceFiles).flat().length} files
+  - TypeScript: ${analysis.structure.sourceFiles.typescript.length}
+  - JavaScript: ${analysis.structure.sourceFiles.javascript.length}
+  - Python: ${analysis.structure.sourceFiles.python.length}
+  - Other: ${analysis.structure.sourceFiles.other.length}
+
+## Entry Points
+${analysis.architecture.entryPoints.length > 0 ? 
+  analysis.architecture.entryPoints.map(entry => `- \`${entry}\``).join('\n') : 
+  '- No specific entry points detected'}
 
 ## Focus Areas
 ${options.focusAreas.map(area => `- ${area}`).join('\n')}
-
-## Structure Type
-${options.structureType === 'standard' ? 'Standard memory bank structure' : 'Custom structure based on specific requirements'}
 
 Generated: ${timestamp}
 `;
 
     case 'productContext.md':
+      const hasScripts = Object.keys(analysis.dependencies.scripts).length > 0;
       return `# Product Context
 
 ## Purpose
-This ${analysis.projectType.toLowerCase()} serves as [describe the main purpose and goals].
+${analysis.description || 'This project serves specific business and technical requirements.'}
 
-## Problems Solved
-- [List key problems this project addresses]
-- [User pain points resolved]
-- [Technical challenges overcome]
+## Project Details
+- **Name:** ${analysis.projectName}
+- **Version:** ${analysis.version}
+- **Type:** ${analysis.projectType}
 
-## Target Users
-- [Primary user types]
-- [Use cases and scenarios]
+## Architecture Patterns
+${analysis.architecture.patterns.length > 0 ? 
+  analysis.architecture.patterns.map(pattern => `- ${pattern}`).join('\n') : 
+  '- Standard project organization'}
 
-## Success Criteria
-- [How success is measured]
-- [Key performance indicators]
+## Development Workflow
+${hasScripts ? 
+  `### Available Scripts\n${Object.entries(analysis.dependencies.scripts).map(([name, cmd]) => `- \`npm run ${name}\`: ${cmd}`).join('\n')}` :
+  '### Development\nStandard development practices apply.'}
+
+## Runtime Dependencies
+${Object.keys(analysis.dependencies.runtime).length > 0 ? 
+  Object.entries(analysis.dependencies.runtime).slice(0, 10).map(([name, version]) => `- ${name}@${version}`).join('\n') :
+  'No external runtime dependencies detected.'}
+
+## Configuration
+${analysis.architecture.configFiles.length > 0 ? 
+  `Configuration managed through:\n${analysis.architecture.configFiles.map(file => `- \`${file}\``).join('\n')}` :
+  'Standard configuration practices.'}
 
 Generated: ${timestamp}
 `;
@@ -951,26 +1410,33 @@ Generated: ${timestamp}
     case 'activeContext.md':
       return `# Active Context
 
-## Current Focus
-[What is currently being worked on]
+## Current Project State
+Working on **${analysis.projectName}** - ${analysis.projectType} with ${analysis.structure.complexity.toLowerCase()} complexity.
 
-## Recent Changes
-- [Latest modifications and updates]
-- [New features or improvements]
+## Project Structure Overview
+- **Total Files:** ${analysis.structure.estimatedFiles}
+- **Main Directories:** ${analysis.structure.directories.slice(0, 5).join(', ')}
+- **Key Technologies:** ${analysis.structure.keyPatterns.join(', ')}
+
+## Active Development Areas
+${analysis.frameworks.length > 0 ? 
+  `### Framework Integration\n${analysis.frameworks.map(fw => `- ${fw} configuration and usage`).join('\n')}\n` : ''}
+
+### Source Organization
+${Object.entries(analysis.structure.sourceFiles)
+  .filter(([_, files]) => files.length > 0)
+  .map(([type, files]) => `- **${type.charAt(0).toUpperCase() + type.slice(1)}:** ${files.length} files`)
+  .join('\n')}
 
 ## Next Steps
-1. [Immediate next actions]
-2. [Short-term goals]
-3. [Upcoming milestones]
+1. **Code Review:** Focus on ${analysis.structure.sourceFiles.typescript.length > 0 ? 'TypeScript' : 'JavaScript'} implementation
+2. **Dependencies:** Monitor ${Object.keys(analysis.dependencies.runtime).length} runtime dependencies
+3. **Architecture:** Leverage identified patterns: ${analysis.architecture.patterns.join(', ')}
 
-## Active Decisions
-- [Current architectural decisions being made]
-- [Trade-offs being considered]
-
-## Learnings and Insights
-- [Recent discoveries]
-- [Important patterns identified]
-- [Best practices established]
+## Recent Insights
+- Project uses ${analysis.frameworks.length} framework(s)
+- Configuration spread across ${analysis.architecture.configFiles.length} files
+- Entry points: ${analysis.architecture.entryPoints.join(', ') || 'Standard'}
 
 Last updated: ${timestamp}
 `;
@@ -979,21 +1445,38 @@ Last updated: ${timestamp}
       return `# System Patterns
 
 ## Architecture Overview
-${analysis.projectType} with ${analysis.structure.complexity.toLowerCase()} complexity.
+**${analysis.projectName}** follows ${analysis.architecture.patterns.join(', ') || 'standard'} architectural patterns.
 
-## Key Design Patterns
-${analysis.structure.keyPatterns.map(pattern => `- ${pattern}`).join('\n')}
+**Complexity Level:** ${analysis.structure.complexity}
+**Project Type:** ${analysis.projectType}
 
-## Component Relationships
-[Describe how main components interact]
+## Technology Integration
+### Frameworks & Tools
+${analysis.frameworks.length > 0 ? 
+  analysis.frameworks.map(fw => `- **${fw}**: Integrated for enhanced functionality`).join('\n') :
+  'No major frameworks detected - likely using vanilla technologies'}
 
-## Critical Implementation Paths
-[Document key code flows and processes]
+### Key Patterns Detected
+${analysis.structure.keyPatterns.map(pattern => `- **${pattern}**: Core technology component`).join('\n')}
 
-## Technical Decisions
-- [Major architectural choices]
-- [Technology selection rationale]
-- [Design pattern usage]
+## File Organization
+### Source Code Structure
+${Object.entries(analysis.structure.sourceFiles)
+  .filter(([_, files]) => files.length > 0)
+  .map(([type, files]) => {
+    const sampleFiles = files.slice(0, 3);
+    return `**${type.charAt(0).toUpperCase() + type.slice(1)} Files (${files.length}):**\n${sampleFiles.map(file => `  - \`${file}\``).join('\n')}${files.length > 3 ? `\n  - ... and ${files.length - 3} more` : ''}`;
+  }).join('\n\n')}
+
+## Entry Points & Flow
+${analysis.architecture.entryPoints.length > 0 ? 
+  `Main application entry points:\n${analysis.architecture.entryPoints.map(entry => `- \`${entry}\``).join('\n')}` :
+  'Entry points follow standard conventions for the project type.'}
+
+## Configuration Management
+${analysis.architecture.configFiles.length > 0 ? 
+  `Configuration handled through:\n${analysis.architecture.configFiles.map(file => `- \`${file}\``).join('\n')}` :
+  'Standard configuration practices apply.'}
 
 Generated: ${timestamp}
 `;
@@ -1002,50 +1485,97 @@ Generated: ${timestamp}
       return `# Technical Context
 
 ## Technology Stack
-${analysis.structure.keyPatterns.map(tech => `- ${tech}`).join('\n')}
+### Primary Technologies
+${analysis.structure.keyPatterns.map(tech => `- **${tech}**: Core technology component`).join('\n')}
 
-## Development Environment
-- Project structure: ${analysis.structure.directories.join(', ')}
-- Root files: ${analysis.structure.rootFiles.slice(0, 10).join(', ')}
+### Frameworks & Libraries
+${analysis.frameworks.length > 0 ? 
+  analysis.frameworks.map(fw => `- **${fw}**: Framework integration`).join('\n') :
+  'No major frameworks detected - vanilla implementation'}
 
-## Dependencies
-[List key dependencies and their purposes]
+## Dependencies Management
+### Runtime Dependencies (${Object.keys(analysis.dependencies.runtime).length})
+${Object.keys(analysis.dependencies.runtime).length > 0 ? 
+  Object.entries(analysis.dependencies.runtime).slice(0, 8).map(([name, version]) => `- \`${name}@${version}\``).join('\n') +
+  (Object.keys(analysis.dependencies.runtime).length > 8 ? `\n- ... and ${Object.keys(analysis.dependencies.runtime).length - 8} more dependencies` : '') :
+  'No external runtime dependencies detected.'}
 
-## Build and Deploy
-[Describe build process and deployment steps]
+### Development Dependencies (${Object.keys(analysis.dependencies.development).length})
+${Object.keys(analysis.dependencies.development).length > 0 ? 
+  Object.entries(analysis.dependencies.development).slice(0, 5).map(([name, version]) => `- \`${name}@${version}\``).join('\n') +
+  (Object.keys(analysis.dependencies.development).length > 5 ? `\n- ... and ${Object.keys(analysis.dependencies.development).length - 5} more dev dependencies` : '') :
+  'No development dependencies detected.'}
 
-## Development Workflow
-[Document development patterns and practices]
+## Project Structure
+- **Root Directory:** ${analysis.structure.rootFiles.slice(0, 8).join(', ')}${analysis.structure.rootFiles.length > 8 ? ` and ${analysis.structure.rootFiles.length - 8} more files` : ''}
+- **Source Files:** ${Object.values(analysis.structure.sourceFiles).flat().length} total across ${Object.entries(analysis.structure.sourceFiles).filter(([_, files]) => files.length > 0).length} languages
+- **Configuration:** ${analysis.architecture.configFiles.length} config files
+
+## Build & Development
+${Object.keys(analysis.dependencies.scripts).length > 0 ? 
+  `### Available Scripts\n${Object.entries(analysis.dependencies.scripts).map(([name, cmd]) => `- \`npm run ${name}\`\n  ${cmd}`).join('\n')}` :
+  '### Development\nStandard development workflow without custom scripts.'}
+
+## Architecture Decisions
+${analysis.architecture.patterns.length > 0 ? 
+  `Current architectural patterns:\n${analysis.architecture.patterns.map(pattern => `- ${pattern}`).join('\n')}` :
+  'Standard project organization without specific architectural patterns.'}
 
 Generated: ${timestamp}
 `;
 
     case 'progress.md':
+      const totalDeps = Object.keys(analysis.dependencies.runtime).length + Object.keys(analysis.dependencies.development).length;
       return `# Progress
 
 ## Current Status
-Project analyzed with ${options.detailLevel} detail level.
+**${analysis.projectName}** v${analysis.version} - ${analysis.projectType}
 
-## What Works
-- [Completed features and components]
-- [Stable functionality]
+### Project Metrics
+- **Complexity:** ${analysis.structure.complexity}
+- **File Count:** ${analysis.structure.estimatedFiles} files
+- **Dependencies:** ${totalDeps} total packages
+- **Frameworks:** ${analysis.frameworks.length} integrated
 
-## What's Left to Build
-- [Planned features]
-- [Technical debt to address]
+## What's Working
+### Technology Stack
+${analysis.frameworks.length > 0 ? 
+  `- Frameworks: ${analysis.frameworks.join(', ')}` : 
+  '- Core technologies without major frameworks'}
+- Technologies: ${analysis.structure.keyPatterns.join(', ')}
+- Configuration: ${analysis.architecture.configFiles.length} config files
 
-## Known Issues
-- [Current bugs or limitations]
-- [Performance concerns]
+### Source Code Organization
+${Object.entries(analysis.structure.sourceFiles)
+  .filter(([_, files]) => files.length > 0)
+  .map(([type, files]) => `- **${type.charAt(0).toUpperCase() + type.slice(1)}:** ${files.length} files organized`)
+  .join('\n')}
+
+## Development Infrastructure
+${Object.keys(analysis.dependencies.scripts).length > 0 ? 
+  `### Automated Scripts (${Object.keys(analysis.dependencies.scripts).length})\n${Object.keys(analysis.dependencies.scripts).map(script => `- \`${script}\``).join('\n')}` :
+  '### Development\n- Manual development workflow'}
+
+### Entry Points Established
+${analysis.architecture.entryPoints.length > 0 ? 
+  analysis.architecture.entryPoints.map(entry => `- \`${entry}\``).join('\n') :
+  '- Standard entry point conventions'}
+
+## Next Development Phase
+### Immediate Focus
+1. **Code Quality:** Review ${Object.values(analysis.structure.sourceFiles).flat().length} source files
+2. **Dependencies:** Audit ${Object.keys(analysis.dependencies.runtime).length} runtime dependencies
+3. **Architecture:** Enhance ${analysis.architecture.patterns.join(', ') || 'current patterns'}
+
+### Technical Debt
+- Configuration consolidation across ${analysis.architecture.configFiles.length} files
+- Dependency optimization for ${totalDeps} packages
+- ${analysis.structure.complexity} complexity management
 
 ## Recent Accomplishments
-- Memory bank structure established
-- Project analysis completed
-
-## Next Milestones
-1. [Short-term goals]
-2. [Medium-term objectives]
-3. [Long-term vision]
+- Memory bank analysis completed with ${options.detailLevel} detail level
+- Project structure documented: ${analysis.structure.directories.join(', ')}
+- Technology stack identified and categorized
 
 Last updated: ${timestamp}
 `;
@@ -1053,7 +1583,11 @@ Last updated: ${timestamp}
     default:
       return `# ${fileName.replace('.md', '').replace(/([A-Z])/g, ' $1').trim()}
 
-[Content for ${fileName}]
+## Project Context
+${analysis.projectName} - ${analysis.description}
+
+## Content for ${fileName}
+Detailed documentation specific to this section.
 
 Generated: ${timestamp}
 `;
@@ -1062,27 +1596,213 @@ Generated: ${timestamp}
 
 async function generateAdditionalFileContent(
   fileName: string,
-  _analysis: ProjectAnalysis,
+  analysis: ProjectAnalysis,
   _options: MemoryBankOptions,
   category?: { folder: string; description: string; patterns: string[] }
 ): Promise<string> {
   const timestamp = new Date().toISOString();
   const baseTitle = fileName.replace('.md', '').replace(/([A-Z])/g, ' $1').trim();
+  const fileType = fileName.replace('.md', '');
   
-  let content = `# ${baseTitle}\n\n`;
+  let content = `# ${baseTitle.charAt(0).toUpperCase() + baseTitle.slice(1)}\n\n`;
   
   if (category) {
     content += `## Category: ${category.folder}\n${category.description}\n\n`;
   }
   
-  content += `## Overview
-Additional documentation for ${fileName.replace('.md', '')}.
+  // Generate specific content based on file type
+  switch (fileType.toLowerCase()) {
+    case 'api':
+      content += `## API Overview
+${analysis.projectName} exposes APIs for core functionality.
 
-## Details
-[Specific content for this additional section]
+### Framework Integration
+${analysis.frameworks.includes('Express.js') || analysis.frameworks.includes('Fastify') || analysis.frameworks.includes('NestJS') ? 
+  `API framework detected: ${analysis.frameworks.filter(fw => fw.includes('Express') || fw.includes('Fastify') || fw.includes('NestJS')).join(', ')}` :
+  'API implementation follows standard patterns for the project type.'}
 
-## Integration
-[How this relates to the main project]`;
+### Entry Points
+${analysis.architecture.entryPoints.length > 0 ? 
+  `Main API entry points:\n${analysis.architecture.entryPoints.map(entry => `- \`${entry}\``).join('\n')}` :
+  'API entry points follow standard conventions.'}
+
+### Dependencies
+${Object.keys(analysis.dependencies.runtime).filter(dep => 
+  ['express', 'fastify', 'axios', 'fetch', 'request'].some(apiDep => dep.includes(apiDep))
+).length > 0 ? 
+  `API-related dependencies:\n${Object.entries(analysis.dependencies.runtime)
+    .filter(([name]) => ['express', 'fastify', 'axios', 'fetch', 'request'].some(apiDep => name.includes(apiDep)))
+    .map(([name, version]) => `- \`${name}@${version}\``)
+    .join('\n')}` :
+  'No specific API dependencies detected in package.json.'}
+
+### Implementation Notes
+- Follow REST/GraphQL conventions as appropriate
+- Implement proper error handling and validation
+- Consider authentication and authorization requirements`;
+      break;
+
+    case 'deployment':
+      content += `## Deployment Strategy
+Deployment configuration for ${analysis.projectName}.
+
+### Project Type: ${analysis.projectType}
+${analysis.projectType.includes('Node.js') || analysis.projectType.includes('TypeScript') ? 
+  'Node.js deployment strategies apply.' :
+  'Deployment follows conventions for the detected project type.'}
+
+### Build Process
+${Object.keys(analysis.dependencies.scripts).length > 0 ? 
+  `Available build scripts:\n${Object.entries(analysis.dependencies.scripts)
+    .filter(([name]) => name.includes('build') || name.includes('start') || name.includes('deploy'))
+    .map(([name, cmd]) => `- \`npm run ${name}\`: ${cmd}`)
+    .join('\n')}` :
+  'No specific build scripts detected. Manual deployment process may be required.'}
+
+### Dependencies
+- **Runtime:** ${Object.keys(analysis.dependencies.runtime).length} packages
+- **Development:** ${Object.keys(analysis.dependencies.development).length} packages
+
+### Configuration Files
+${analysis.architecture.configFiles.filter(file => 
+  file.includes('docker') || file.includes('deploy') || file.includes('config')
+).length > 0 ? 
+  `Deployment-related config:\n${analysis.architecture.configFiles
+    .filter(file => file.includes('docker') || file.includes('deploy') || file.includes('config'))
+    .map(file => `- \`${file}\``)
+    .join('\n')}` :
+  'Standard configuration files apply for deployment.'}
+
+### Environment Considerations
+- Ensure all dependencies are production-ready
+- Configure environment variables as needed
+- Set up proper logging and monitoring`;
+      break;
+
+    case 'features':
+      content += `## Feature Overview
+Core features and functionality of ${analysis.projectName}.
+
+### Project Scope
+${analysis.description || 'Feature set determined by project requirements and technical implementation.'}
+
+### Technical Implementation
+**Project Type:** ${analysis.projectType}
+**Complexity:** ${analysis.structure.complexity}
+
+### Framework Features
+${analysis.frameworks.length > 0 ? 
+  `Leveraging capabilities from:\n${analysis.frameworks.map(fw => `- **${fw}**: Framework-specific features and patterns`).join('\n')}` :
+  'Features implemented using core technologies without major framework dependencies.'}
+
+### Source Code Organization
+${Object.entries(analysis.structure.sourceFiles)
+  .filter(([_, files]) => files.length > 0)
+  .map(([type, files]) => `- **${type.charAt(0).toUpperCase() + type.slice(1)} Features:** ${files.length} implementation files`)
+  .join('\n')}
+
+### Key Capabilities
+${analysis.structure.keyPatterns.map(pattern => `- ${pattern} integration`).join('\n')}
+
+### Development Scripts
+${Object.keys(analysis.dependencies.scripts).length > 0 ? 
+  `Feature development supported by:\n${Object.keys(analysis.dependencies.scripts).slice(0, 5).map(script => `- \`npm run ${script}\``).join('\n')}` :
+  'Manual feature development workflow.'}`;
+      break;
+
+    case 'testing':
+      const testingFrameworks = analysis.frameworks.filter(fw => fw.includes('Jest') || fw.includes('Vitest'));
+      content += `## Testing Strategy
+Testing approach for ${analysis.projectName}.
+
+### Testing Framework
+${testingFrameworks.length > 0 ? 
+  `Using: ${testingFrameworks.join(', ')}` :
+  'Testing framework to be determined based on project requirements.'}
+
+### Test Organization
+${analysis.structure.sourceFiles.typescript.length > 0 || analysis.structure.sourceFiles.javascript.length > 0 ? 
+  `- **Source Files to Test:** ${analysis.structure.sourceFiles.typescript.length + analysis.structure.sourceFiles.javascript.length} files
+- **Test Coverage:** Focus on core functionality and edge cases` :
+  'Test organization follows standard practices for the project type.'}
+
+### Testing Dependencies
+${Object.keys(analysis.dependencies.development).filter(dep => 
+  dep.includes('test') || dep.includes('jest') || dep.includes('vitest') || dep.includes('mocha')
+).length > 0 ? 
+  `Test-related dev dependencies:\n${Object.entries(analysis.dependencies.development)
+    .filter(([name]) => name.includes('test') || name.includes('jest') || name.includes('vitest') || name.includes('mocha'))
+    .map(([name, version]) => `- \`${name}@${version}\``)
+    .join('\n')}` :
+  'No specific testing dependencies detected. Consider adding test framework.'}
+
+### Test Scripts
+${Object.entries(analysis.dependencies.scripts).filter(([name]) => name.includes('test')).length > 0 ? 
+  `Available test commands:\n${Object.entries(analysis.dependencies.scripts)
+    .filter(([name]) => name.includes('test'))
+    .map(([name, cmd]) => `- \`npm run ${name}\`: ${cmd}`)
+    .join('\n')}` :
+  'No test scripts configured. Manual testing approach.'}
+
+### Testing Approach
+- Unit tests for core functionality
+- Integration tests for component interaction
+- End-to-end tests for user workflows`;
+      break;
+
+    case 'security':
+      content += `## Security Considerations
+Security measures and best practices for ${analysis.projectName}.
+
+### Project Security Profile
+**Type:** ${analysis.projectType}
+**Dependencies:** ${Object.keys(analysis.dependencies.runtime).length} runtime packages
+
+### Dependency Security
+${Object.keys(analysis.dependencies.runtime).length > 0 ? 
+  `Monitor security for ${Object.keys(analysis.dependencies.runtime).length} runtime dependencies:
+${Object.keys(analysis.dependencies.runtime).slice(0, 8).map(dep => `- \`${dep}\``).join('\n')}${Object.keys(analysis.dependencies.runtime).length > 8 ? `\n- ... and ${Object.keys(analysis.dependencies.runtime).length - 8} more` : ''}
+
+Run \`npm audit\` regularly to check for vulnerabilities.` :
+  'No external runtime dependencies detected. Reduced attack surface.'}
+
+### Framework Security
+${analysis.frameworks.length > 0 ? 
+  `Security considerations for integrated frameworks:\n${analysis.frameworks.map(fw => `- **${fw}**: Follow framework-specific security guidelines`).join('\n')}` :
+  'Security follows standard practices for the project type without framework-specific concerns.'}
+
+### Configuration Security
+${analysis.architecture.configFiles.length > 0 ? 
+  `Secure configuration across ${analysis.architecture.configFiles.length} config files:
+${analysis.architecture.configFiles.map(file => `- \`${file}\``).join('\n')}
+
+Ensure sensitive data is not exposed in configuration files.` :
+  'Standard configuration security practices apply.'}
+
+### Best Practices
+- Keep dependencies updated and audited
+- Implement proper input validation
+- Use environment variables for sensitive configuration
+- Enable security headers and HTTPS in production`;
+      break;
+
+    default:
+      content += `## Overview
+Documentation for ${baseTitle} in the context of ${analysis.projectName}.
+
+### Project Integration
+**Type:** ${analysis.projectType}
+**Frameworks:** ${analysis.frameworks.join(', ') || 'Core technologies'}
+
+### Related Files
+${Object.values(analysis.structure.sourceFiles).flat().length > 0 ? 
+  `${Object.values(analysis.structure.sourceFiles).flat().length} source files in the project may relate to this documentation.` :
+  'Source file organization to be documented as project develops.'}
+
+### Implementation Notes
+Specific implementation details for ${baseTitle} functionality.`;
+      break;
+  }
 
   if (category) {
     content += `
@@ -1098,4 +1818,584 @@ Generated: ${timestamp}
 `;
 
   return content;
+}
+
+/**
+ * Perform interactive sync conflict resolution
+ */
+export async function performInteractiveSyncResolution(
+  memoryBankDir: string,
+  projectRoot: string,
+  conflictDetails: SyncConflictDetails
+): Promise<InteractiveResolutionResult> {
+  const conversationLog: ConversationStep[] = [];
+  const userChoices: UserChoice[] = [];
+  const actionsPerformed: ConflictAction[] = [];
+  
+  let stepNumber = 1;
+  
+  // Step 1: Present conflict overview
+  conversationLog.push({
+    step: stepNumber++,
+    type: 'information',
+    content: generateConflictOverview(conflictDetails),
+    timestamp: new Date().toISOString()
+  });
+  
+  // Step 2: Present resolution options
+  const resolutionOptions = generateResolutionOptions(conflictDetails);
+  const resolutionQuestion: ConversationStep = {
+    step: stepNumber++,
+    type: 'question',
+    content: "How would you like to resolve these sync conflicts?",
+    options: resolutionOptions,
+    timestamp: new Date().toISOString()
+  };
+  conversationLog.push(resolutionQuestion);
+  
+  // For this implementation, we'll simulate different resolution approaches
+  // In a real interactive system, this would wait for user input
+  const simulatedUserChoice = conflictDetails.autoResolvable ? 
+    "Auto-resolve all conflicts" : 
+    "Review each conflict individually";
+  
+  resolutionQuestion.userResponse = simulatedUserChoice;
+  userChoices.push({
+    question: resolutionQuestion.content,
+    answer: simulatedUserChoice
+  });
+  
+  // Step 3: Execute resolution based on user choice
+  if (simulatedUserChoice === "Auto-resolve all conflicts" && conflictDetails.autoResolvable) {
+    // Auto-resolve: add all missing references
+    for (const action of conflictDetails.suggestedActions) {
+      if (action.actionType === 'add-reference' && !action.requiresConfirmation) {
+        await executeResolutionAction(action, memoryBankDir, projectRoot);
+        actionsPerformed.push(action);
+      }
+    }
+    
+    conversationLog.push({
+      step: stepNumber++,
+      type: 'result',
+      content: `✅ Auto-resolved ${actionsPerformed.length} conflicts. All missing file references have been added to copilot-instructions.md.`,
+      timestamp: new Date().toISOString()
+    });
+    
+  } else {
+    // Manual review: present each conflict for user decision
+    for (let i = 0; i < conflictDetails.suggestedActions.length; i++) {
+      const action = conflictDetails.suggestedActions[i];
+      
+      const actionQuestion: ConversationStep = {
+        step: stepNumber++,
+        type: 'confirmation',
+        content: `Conflict ${i + 1}/${conflictDetails.suggestedActions.length}: ${action.description}\n\nDetails: ${action.details}\n\nWould you like to perform this action?`,
+        options: ['Yes - Apply this fix', 'No - Skip this conflict', 'Stop - Cancel resolution'],
+        timestamp: new Date().toISOString()
+      };
+      conversationLog.push(actionQuestion);
+      
+      // Simulate user response based on action characteristics
+      const responseOptions = ['Yes - Apply this fix', 'No - Skip this conflict', 'Stop - Cancel resolution'];
+      const simulatedResponse = action.requiresConfirmation && conflictDetails.severity === 'high' ?
+        responseOptions[1] : responseOptions[0];
+      
+      actionQuestion.userResponse = simulatedResponse;
+      
+      const choice: UserChoice = {
+        question: `Apply fix: ${action.description}?`,
+        answer: simulatedResponse
+      };
+      
+      if (simulatedResponse === responseOptions[0]) {
+        choice.selectedAction = action;
+      }
+      
+      userChoices.push(choice);
+      
+      if (simulatedResponse === responseOptions[0]) {
+        await executeResolutionAction(action, memoryBankDir, projectRoot);
+        actionsPerformed.push(action);
+      } else if (simulatedResponse === responseOptions[2]) {
+        break;
+      }
+    }
+    
+    conversationLog.push({
+      step: stepNumber++,
+      type: 'result',
+      content: `✅ Resolution complete. Applied ${actionsPerformed.length} out of ${conflictDetails.suggestedActions.length} suggested fixes.`,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  // Step 4: Validate final state
+  const finalValidation = await validateCopilotSync(memoryBankDir, projectRoot, false);
+  
+  conversationLog.push({
+    step: stepNumber++,
+    type: 'information',
+    content: `Final sync status: ${finalValidation.isInSync ? '✅ Fully synchronized' : '⚠️ Some conflicts remain'}\n\nMemory bank files: ${finalValidation.memoryBankFiles.length}\nReferenced files: ${finalValidation.copilotReferences.length}\nRemaining unreferenced: ${finalValidation.missingReferences.length}\nRemaining orphaned: ${finalValidation.orphanedReferences.length}`,
+    timestamp: new Date().toISOString()
+  });
+  
+  return {
+    resolved: finalValidation.isInSync,
+    actionsPerformed,
+    userChoices,
+    finalState: finalValidation,
+    conversationLog
+  };
+}
+
+/**
+ * Generate human-readable conflict overview
+ */
+function generateConflictOverview(conflictDetails: SyncConflictDetails): string {
+  const { conflictType, severity, missingFiles, orphanedFiles } = conflictDetails;
+  
+  let overview = `🔍 Sync Conflict Analysis\n\n`;
+  overview += `Conflict Type: ${conflictType.replace(/-/g, ' ').toUpperCase()}\n`;
+  overview += `Severity: ${severity.toUpperCase()}\n\n`;
+  
+  if (missingFiles.length > 0) {
+    overview += `📄 Unreferenced Files (${missingFiles.length}):\n`;
+    missingFiles.forEach(file => {
+      overview += `  • ${file.fileName} (${file.impact} impact)\n    ${file.description}\n`;
+    });
+    overview += '\n';
+  }
+  
+  if (orphanedFiles.length > 0) {
+    overview += `🔗 Orphaned References (${orphanedFiles.length}):\n`;
+    orphanedFiles.forEach(file => {
+      overview += `  • ${file.fileName}\n    ${file.description}\n`;
+    });
+    overview += '\n';
+  }
+  
+  overview += `Auto-resolvable: ${conflictDetails.autoResolvable ? 'Yes' : 'No'}\n`;
+  overview += `Suggested actions: ${conflictDetails.suggestedActions.length}`;
+  
+  return overview;
+}
+
+/**
+ * Generate resolution option descriptions
+ */
+function generateResolutionOptions(conflictDetails: SyncConflictDetails): string[] {
+  const options = [];
+  
+  if (conflictDetails.autoResolvable) {
+    options.push("Auto-resolve all conflicts");
+  }
+  
+  options.push("Review each conflict individually");
+  options.push("Show detailed conflict analysis only");
+  options.push("Cancel - Exit without changes");
+  
+  return options;
+}
+
+/**
+ * Execute a specific resolution action
+ */
+async function executeResolutionAction(
+  action: ConflictAction,
+  memoryBankDir: string,
+  projectRoot: string
+): Promise<void> {
+  const copilotPath = path.join(projectRoot, '.github', 'copilot-instructions.md');
+  
+  switch (action.actionType) {
+    case 'add-reference':
+      await addFileReferenceToCorpilotInstructions(copilotPath, action.targetFile);
+      break;
+      
+    case 'remove-reference':
+      await removeFileReferenceFromCorpilotInstructions(copilotPath, action.targetFile);
+      break;
+      
+    case 'create-file':
+      await createMissingMemoryBankFile(memoryBankDir, action.targetFile);
+      break;
+      
+    case 'delete-file':
+      await deleteObsoleteMemoryBankFile(memoryBankDir, action.targetFile);
+      break;
+      
+    case 'update-structure':
+      // Re-generate copilot instructions to match current structure
+      await setupCopilotInstructions(projectRoot, { syncValidation: true });
+      break;
+  }
+}
+
+/**
+ * Add file reference to Copilot instructions
+ */
+async function addFileReferenceToCorpilotInstructions(copilotPath: string, fileName: string): Promise<void> {
+  try {
+    const content = await fs.readFile(copilotPath, 'utf8');
+    
+    // Find the Memory Bank Structure section and add the file reference
+    const lines = content.split('\n');
+    let insertIndex = -1;
+    
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes('### Core Files') || lines[i].includes('### Additional Files')) {
+        // Find the end of this section to insert the reference
+        for (let j = i + 1; j < lines.length; j++) {
+          if (lines[j].startsWith('###') || lines[j].startsWith('##')) {
+            insertIndex = j;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    
+    if (insertIndex > -1) {
+      const isSemanticFile = fileName.includes('/');
+      const reference = isSemanticFile ? 
+        `- \`${fileName}\`` : 
+        `- \`${fileName}\` ✅`;
+      
+      lines.splice(insertIndex, 0, reference);
+      await fs.writeFile(copilotPath, lines.join('\n'), 'utf8');
+    }
+  } catch (error) {
+    console.error(`Failed to add reference for ${fileName}:`, error);
+  }
+}
+
+/**
+ * Remove file reference from Copilot instructions
+ */
+async function removeFileReferenceFromCorpilotInstructions(copilotPath: string, fileName: string): Promise<void> {
+  try {
+    const content = await fs.readFile(copilotPath, 'utf8');
+    const lines = content.split('\n');
+    
+    // Remove lines that reference the file
+    const filteredLines = lines.filter(line => !line.includes(fileName));
+    
+    await fs.writeFile(copilotPath, filteredLines.join('\n'), 'utf8');
+  } catch (error) {
+    console.error(`Failed to remove reference for ${fileName}:`, error);
+  }
+}
+
+/**
+ * Create missing memory bank file
+ */
+async function createMissingMemoryBankFile(memoryBankDir: string, fileName: string): Promise<void> {
+  try {
+    const filePath = path.join(memoryBankDir, fileName);
+    const directory = path.dirname(filePath);
+    
+    // Ensure directory exists
+    await fs.mkdir(directory, { recursive: true });
+    
+    // Generate basic content for the file
+    const content = `# ${fileName.replace('.md', '').replace(/([A-Z])/g, ' $1').trim()}
+
+This file was created to resolve a sync conflict between the memory bank and Copilot instructions.
+
+## Overview
+[Add content describing the purpose of this file]
+
+## Details
+[Add specific information relevant to this context]
+
+Generated: ${new Date().toISOString()}
+`;
+    
+    await fs.writeFile(filePath, content, 'utf8');
+  } catch (error) {
+    console.error(`Failed to create file ${fileName}:`, error);
+  }
+}
+
+/**
+ * Delete obsolete memory bank file
+ */
+async function deleteObsoleteMemoryBankFile(memoryBankDir: string, fileName: string): Promise<void> {
+  try {
+    const filePath = path.join(memoryBankDir, fileName);
+    await fs.unlink(filePath);
+  } catch (error) {
+    console.error(`Failed to delete file ${fileName}:`, error);
+  }
+}
+
+/**
+ * Performs conversational project analysis to guide memory bank generation
+ */
+export async function analyzeProjectForConversation(
+  projectRoot: string,
+  mode: 'analyze-first' | 'guided' | 'express' | 'custom' = 'analyze-first'
+): Promise<ConversationalResponse> {
+  try {
+    // Basic project analysis
+    const packageJsonPath = path.join(projectRoot, 'package.json');
+    const readmePath = path.join(projectRoot, 'README.md');
+    
+    let projectType = 'Generic Project';
+    let hasPackageJson = false;
+    let detectedFrameworks: string[] = [];
+    
+    // Analyze package.json if exists
+    try {
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+      hasPackageJson = true;
+      projectType = 'Node.js/TypeScript Project';
+      
+      // Detect frameworks and libraries
+      const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      if (dependencies['@modelcontextprotocol/sdk']) detectedFrameworks.push('MCP Server');
+      if (dependencies['typescript']) detectedFrameworks.push('TypeScript');
+      if (dependencies['react']) detectedFrameworks.push('React');
+      if (dependencies['vue']) detectedFrameworks.push('Vue');
+      if (dependencies['angular']) detectedFrameworks.push('Angular');
+      if (dependencies['express']) detectedFrameworks.push('Express');
+      if (dependencies['next']) detectedFrameworks.push('Next.js');
+      if (dependencies['jest']) detectedFrameworks.push('Jest Testing');
+    } catch {
+      // No package.json or invalid JSON
+    }
+    
+    // Check for README
+    try {
+      await fs.access(readmePath);
+      // README exists
+    } catch {
+      // No README
+    }
+    
+    // Determine project complexity and make recommendations
+    const complexity = detectedFrameworks.length > 2 ? 'complex' : detectedFrameworks.length > 0 ? 'moderate' : 'simple';
+    
+    let suggestedStructure: 'standard' | 'enhanced' | 'custom';
+    let recommendedFocusAreas: string[] = [];
+    let additionalFilesRecommended: Array<{category: string, files: string[], reasoning: string}> = [];
+    
+    if (complexity === 'complex') {
+      suggestedStructure = 'enhanced';
+      recommendedFocusAreas = ['architecture', 'integrations', 'testing'];
+      
+      if (detectedFrameworks.includes('MCP Server')) {
+        additionalFilesRecommended.push({
+          category: 'integrations',
+          files: ['mcp-integration.md', 'tool-specifications.md'],
+          reasoning: 'MCP servers benefit from detailed tool and integration documentation'
+        });
+      }
+      
+      if (detectedFrameworks.includes('Jest Testing')) {
+        additionalFilesRecommended.push({
+          category: 'testing',
+          files: ['testing-strategy.md', 'test-coverage.md'],
+          reasoning: 'Testing framework detected - comprehensive test documentation recommended'
+        });
+      }
+    } else if (complexity === 'moderate') {
+      suggestedStructure = 'enhanced';
+      recommendedFocusAreas = ['architecture', 'apis'];
+    } else {
+      suggestedStructure = 'standard';
+      recommendedFocusAreas = ['setup', 'usage'];
+    }
+    
+    // Create conversational response based on mode
+    const recommendations: AnalysisRecommendations = {
+      projectType,
+      suggestedStructure,
+      recommendedFocusAreas,
+      additionalFilesRecommended,
+      confidence: hasPackageJson ? 'high' : 'medium'
+    };
+    
+    let conversation: ConversationPrompt;
+    let nextSteps: NextStepGuidance[];
+    
+    switch (mode) {
+      case 'analyze-first':
+        conversation = {
+          message: `I've analyzed your ${projectType}${detectedFrameworks.length > 0 ? ` with ${detectedFrameworks.join(', ')}` : ''}. Based on the complexity, I recommend an ${suggestedStructure} memory bank structure. Would you like to proceed with this recommendation?`,
+          options: [
+            'Yes, use the recommended structure',
+            'Show me customization options', 
+            'Use standard structure instead',
+            'Let me see the analysis details first'
+          ],
+          reasoning: `Detected ${complexity} project complexity with ${detectedFrameworks.length} frameworks/tools`,
+          consequences: [
+            'Enhanced structure includes semantic folders for better organization',
+            'Standard structure uses only the 6 core files',
+            'Customization allows you to specify exactly what you need'
+          ],
+          defaultChoice: 'Yes, use the recommended structure',
+          priority: 'medium'
+        };
+        
+        nextSteps = [
+          {
+            action: 'proceed_with_generation',
+            description: 'Generate memory bank with recommended settings',
+            toolName: 'generate_memory_bank',
+            parameters: { 
+              mode: 'guided',
+              customizationOptions: {
+                structureType: suggestedStructure,
+                focusAreas: recommendedFocusAreas,
+                detailLevel: 'detailed'
+              }
+            },
+            optional: false
+          },
+          {
+            action: 'customize_options',
+            description: 'Configure specific options before generation',
+            optional: true
+          }
+        ];
+        break;
+        
+      case 'guided':
+        conversation = {
+          message: `Ready to generate your ${projectType} memory bank. I'll create ${suggestedStructure === 'enhanced' ? '6 core files plus organized additional files' : '6 core files'}. Should I proceed?`,
+          options: [
+            'Yes, generate the memory bank',
+            'Let me adjust the focus areas',
+            'Show me what files will be created',
+            'Change to custom configuration'
+          ],
+          reasoning: `Configuration ready for ${suggestedStructure} structure`,
+          consequences: [
+            'Files will be created in .github/memory-bank directory',
+            'Copilot instructions will be automatically configured',
+            'You can always update or regenerate later'
+          ],
+          priority: 'high'
+        };
+        
+        nextSteps = [
+          {
+            action: 'generate_files',
+            description: 'Create memory bank files',
+            toolName: 'generate_memory_bank',
+            optional: false
+          }
+        ];
+        break;
+        
+      case 'express':
+        // For express mode, proceed immediately with smart defaults
+        return {
+          requiresUserInput: false,
+          status: 'ready_to_proceed',
+          conversation: {
+            message: `Express mode: Creating ${suggestedStructure} memory bank for your ${projectType}`,
+            options: [],
+            reasoning: 'Using intelligent defaults for fast setup',
+            consequences: ['Memory bank will be created immediately', 'You can customize later if needed'],
+            priority: 'low'
+          },
+          nextSteps: [{
+            action: 'generate_immediately',
+            description: 'Generate with smart defaults',
+            toolName: 'generate_memory_bank',
+            parameters: { 
+              customizationOptions: {
+                structureType: suggestedStructure,
+                focusAreas: recommendedFocusAreas,
+                detailLevel: 'standard',
+                autoConfirm: true
+              }
+            },
+            optional: false
+          }],
+          recommendations,
+          toolToCallNext: 'generate_memory_bank',
+          suggestedParameters: {
+            projectRootPath: projectRoot,
+            mode: 'express',
+            customizationOptions: {
+              structureType: suggestedStructure,
+              focusAreas: recommendedFocusAreas,
+              detailLevel: 'standard',
+              autoConfirm: true
+            }
+          }
+        };
+        
+      default: // custom
+        conversation = {
+          message: `I've analyzed your ${projectType}. In custom mode, you have full control over the memory bank structure. What would you like to configure?`,
+          options: [
+            'Choose structure type (standard/enhanced/custom)',
+            'Select focus areas',
+            'Configure additional files',
+            'Set detail level',
+            'Review all options'
+          ],
+          reasoning: 'Custom mode allows complete control over all aspects',
+          consequences: [
+            'You can configure every aspect of the memory bank',
+            'More options mean more decisions required',
+            'Full flexibility for specialized needs'
+          ],
+          priority: 'medium'
+        };
+        
+        nextSteps = [
+          {
+            action: 'configure_structure',
+            description: 'Choose memory bank structure type',
+            optional: false
+          },
+          {
+            action: 'configure_focus',
+            description: 'Select focus areas',
+            optional: true
+          },
+          {
+            action: 'configure_files',
+            description: 'Choose additional files',
+            optional: true
+          }
+        ];
+    }
+    
+    return {
+      requiresUserInput: true,
+      status: 'awaiting_user_input',
+      conversation,
+      nextSteps,
+      recommendations
+    };
+    
+  } catch (error) {
+    return {
+      requiresUserInput: false,
+      status: 'error',
+      conversation: {
+        message: `Error analyzing project: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        options: ['Retry analysis', 'Proceed with manual configuration'],
+        reasoning: 'Project analysis failed',
+        consequences: ['May need to configure options manually'],
+        priority: 'high'
+      },
+      nextSteps: [],
+      recommendations: {
+        projectType: 'Unknown',
+        suggestedStructure: 'standard',
+        recommendedFocusAreas: [],
+        additionalFilesRecommended: [],
+        confidence: 'low'
+      }
+    };
+  }
 }

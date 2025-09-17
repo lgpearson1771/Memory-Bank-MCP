@@ -1,0 +1,14 @@
+{
+  "tools": [
+    {
+      "name": "generate_memory_bank",
+      "arguments": {
+        "projectRootPath": "c:\\MCPs\\Memory-Bank-MCP",
+        "mode": "analyze-first",
+        "customizationOptions": {
+          "guidance": "interactive"
+        }
+      }
+    }
+  ]
+}
