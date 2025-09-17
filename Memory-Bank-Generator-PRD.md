@@ -12,7 +12,12 @@ Create an intelligent MCP server that automatically generates, maintains, and ev
 ### Value Proposition
 - **For Developers**: Automatic documentation and knowledge capture without manual effort
 - **For AI Assistants**: Rich contextual understanding of projects for better assistance
-- **For Teams**: Shared knowledge base that grows with the project
+- **For Teams**: Shared knowledge base that grows with the pro3. **Dynamic Copilot Integration & Semantic Organization**
+   - **Implement Semantic Folder Structure**: Core files at root, additional files in semantic folders (features/, integrations/, deployment/, etc.)
+   - **Modify `setup_copilot_instructions`**: Dynamically include all memory bank files (core + additional) in `copilot-instructions.md` with semantic folder awareness
+   - **Enhance `validate_memory_bank`**: Add validation check to verify all files in `.github/memory-bank/` (including nested folders) are referenced in `copilot-instructions.md`
+   - **Smart Categorization**: Auto-categorize additional files into appropriate semantic folders based on content type
+   - **Auto-sync mechanism**: Ensure Copilot instructions stay synchronized when memory bank files are added/removed/reorganized
 
 ---
 
@@ -103,14 +108,30 @@ const implementedTools = [
 ```
 .github/
 ├── memory-bank/
-│   ├── projectbrief.md          # ✅ Foundation document
-│   ├── productContext.md        # ✅ Purpose and goals
-│   ├── activeContext.md         # ✅ Current work focus
-│   ├── systemPatterns.md        # ✅ Architecture and patterns
-│   ├── techContext.md           # ✅ Technologies and setup
-│   └── progress.md              # ✅ Status and milestones
+│   ├── projectbrief.md          # ✅ Foundation document (always at root)
+│   ├── productContext.md        # ✅ Purpose and goals (always at root)
+│   ├── activeContext.md         # ✅ Current work focus (always at root)
+│   ├── systemPatterns.md        # ✅ Architecture and patterns (always at root)
+│   ├── techContext.md           # ✅ Technologies and setup (always at root)
+│   ├── progress.md              # ✅ Status and milestones (always at root)
+│   ├── features/                # 🔄 Optional: Feature-specific documentation
+│   │   ├── authentication.md
+│   │   └── payment-system.md
+│   ├── integrations/            # 🔄 Optional: Integration documentation
+│   │   ├── github-api.md
+│   │   └── stripe-integration.md
+│   └── deployment/              # 🔄 Optional: Deployment documentation
+│       ├── docker-setup.md
+│       └── aws-deployment.md
 └── copilot-instructions.md      # ✅ Automatic Copilot configuration
 ```
+
+**🎯 Organizational Strategy: Semantic Folders**
+- **6 Core Files**: Always at memory bank root for immediate accessibility
+- **Additional Files**: Only generated when explicitly requested by user, organized into semantic folders by purpose/domain
+- **Dynamic Creation**: Folders created only when user requests additional files
+- **User-Driven**: No additional files generated unless specifically requested in customization options
+- **Scalable Design**: Handles simple to complex projects efficiently
 
 ### ✅ 3. Interactive User Experience
 **Priority**: High  
@@ -122,8 +143,12 @@ const implementedTools = [
 2. **Customization Options**: Standard or custom approach selection
 3. **Focus Configuration**: Optional specific areas of interest
 4. **Detail Level**: User-selected analysis depth
-5. **File Generation**: Real file system operations in `.github/memory-bank`
-6. **Copilot Integration**: Automatic setup of `copilot-instructions.md`
+5. **Additional Files**: User explicitly requests supplementary documentation (optional)
+6. **File Generation**: Real file system operations in `.github/memory-bank`
+   - Always generates 6 core files at root level
+   - Only generates additional files if explicitly requested by user
+   - Organizes additional files into semantic folders when generated
+7. **Copilot Integration**: Automatic setup of `copilot-instructions.md`
 
 ### 🔄 4. Multi-Source Intelligence (FUTURE ENHANCEMENT)
 **Priority**: Medium  
@@ -275,12 +300,16 @@ flowchart TD
 <PROJECT_ROOT>/
 └── .github/
     ├── memory-bank/
-    │   ├── projectbrief.md          # ✅ Foundation document
-    │   ├── productContext.md        # ✅ Purpose and goals  
-    │   ├── activeContext.md         # ✅ Current work focus
-    │   ├── systemPatterns.md        # ✅ Architecture patterns
-    │   ├── techContext.md           # ✅ Technologies and setup
-    │   └── progress.md              # ✅ Status and milestones
+    │   ├── projectbrief.md          # ✅ Foundation document (always at root)
+    │   ├── productContext.md        # ✅ Purpose and goals (always at root)
+    │   ├── activeContext.md         # ✅ Current work focus (always at root)
+    │   ├── systemPatterns.md        # ✅ Architecture patterns (always at root)
+    │   ├── techContext.md           # ✅ Technologies and setup (always at root)
+    │   ├── progress.md              # ✅ Status and milestones (always at root)
+    │   ├── features/                # 🔄 Optional: Feature-specific docs
+    │   ├── integrations/            # 🔄 Optional: Integration docs
+    │   ├── deployment/              # 🔄 Optional: Deployment docs
+    │   └── [other-semantic-folders] # 🔄 Optional: Domain-specific organization
     └── copilot-instructions.md      # ✅ Copilot integration
 ```
 
@@ -573,9 +602,34 @@ src/
    - Support custom file extensions and naming patterns
 
 2. **Copilot Instructions Template Enhancement**
-   - Modify embedded template to accept dynamic file list
-   - Generate file-specific reading instructions for each memory bank file
-   - Maintain proper Markdown formatting and structure
+   - Modify embedded template to accept dynamic file list with semantic folder structure
+   - Generate folder-specific reading instructions for each semantic category
+   - Maintain proper Markdown formatting and hierarchical structure
+   - **Enhanced Template Structure**:
+     ```markdown
+     ## Memory Bank Structure
+     
+     ### Core Files (Always read first - located at memory bank root)
+     1. `projectbrief.md` - Foundation document
+     2. `productContext.md` - Purpose and goals
+     3. `activeContext.md` - Current work focus
+     4. `systemPatterns.md` - Architecture patterns
+     5. `techContext.md` - Technologies and setup
+     6. `progress.md` - Status and milestones
+     
+     ### Additional Context (Organized by purpose)
+     {{#each semanticFolders}}
+     #### {{name}}/ - {{description}}
+     {{#each files}}
+     - `{{../name}}/{{this}}` - {{description}}
+     {{/each}}
+     {{/each}}
+     
+     ### Reading Strategy
+     1. **Start with Core Files**: Always read all 6 core files first for foundational understanding
+     2. **Focus Areas**: Based on current task, dive into relevant semantic folders
+     3. **Cross-Reference**: Use core files to understand how folder contents relate to overall architecture
+     ```
 
 3. **Validation Synchronization**
    - Add new validation check: `validateCopilotSync()`
@@ -586,13 +640,39 @@ src/
 #### Technical Implementation Details
 
 ```typescript
-// New validation interface
+// New validation interface with semantic folder support
 interface CopilotSyncValidation {
-  memoryBankFiles: string[];           // Files found in .github/memory-bank/
+  memoryBankFiles: string[];           // Files found in .github/memory-bank/ (including nested)
   copilotReferences: string[];         // Files referenced in copilot-instructions.md
   missingReferences: string[];         // Memory bank files not in Copilot instructions
   extraReferences: string[];           // Copilot references not in memory bank
   isFullySynced: boolean;              // True if all files properly referenced
+  semanticFolders: SemanticFolderInfo[]; // Information about semantic folder organization
+}
+
+// Semantic folder organization
+interface SemanticFolderInfo {
+  folderName: string;                  // e.g., "features", "integrations", "deployment"
+  purpose: string;                     // Description of folder's purpose
+  fileCount: number;                   // Number of files in folder
+  files: string[];                     // List of files in folder
+}
+
+// Enhanced memory bank options with semantic organization
+interface MemoryBankOptions {
+  structureType: 'standard' | 'custom';
+  focusAreas: string[];
+  detailLevel: 'high-level' | 'detailed' | 'granular';
+  additionalFiles: string[];              // User explicitly requests additional files
+  semanticOrganization: boolean;          // Enable semantic folder organization
+  customFolders?: CustomFolderConfig[];   // User-defined semantic folders
+  generateOnlyRequested: boolean;         // Only generate files explicitly requested by user
+}
+
+interface CustomFolderConfig {
+  name: string;                        // Folder name (e.g., "api", "security")
+  description: string;                 // Purpose of the folder
+  filePatterns: string[];              // Files that should go in this folder
 }
 
 // Enhanced validation result
@@ -600,9 +680,24 @@ interface ValidationResult {
   isValid: boolean;
   missingFiles: string[];
   quality: QualityMetrics;
-  copilotSync: CopilotSyncValidation;  // New sync validation
+  copilotSync: CopilotSyncValidation;  // Enhanced sync validation with semantic folders
+  structureCompliance: {               // New: Semantic structure validation
+    coreFilesAtRoot: boolean;
+    properFolderOrganization: boolean;
+    semanticConsistency: boolean;
+  };
 }
 ```
+
+**🎯 Semantic Folder Categories**
+- `features/` - Feature-specific documentation and implementation details
+- `integrations/` - Third-party integrations, APIs, and external services
+- `deployment/` - Deployment guides, infrastructure, and operational procedures
+- `security/` - Security considerations, authentication, and compliance
+- `testing/` - Testing strategies, frameworks, and quality assurance
+- `api/` - API documentation, endpoints, and interface specifications
+- `performance/` - Performance optimization, monitoring, and benchmarks
+- `[custom]/` - User-defined semantic categories based on project needs
 
 ### Immediate Actions (Next 1-2 weeks)
 1. **Enhanced Project Analysis**

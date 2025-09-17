@@ -85,15 +85,30 @@ Memory banks are **always** created in `.github/memory-bank/` with these core fi
 ```
 .github/
 ├── memory-bank/
-│   ├── projectbrief.md          # Foundation document
-│   ├── productContext.md        # Purpose and goals
-│   ├── activeContext.md         # Current work focus
-│   ├── systemPatterns.md        # Architecture and patterns
-│   ├── techContext.md           # Technologies and setup
-│   ├── progress.md              # Status and milestones
-│   └── [additional files]       # Custom sections
-└── copilot-instructions.md      # Copilot configuration
+│   ├── projectbrief.md          # Foundation document (always generated)
+│   ├── productContext.md        # Purpose and goals (always generated)
+│   ├── activeContext.md         # Current work focus (always generated)
+│   ├── systemPatterns.md        # Architecture and patterns (always generated)
+│   ├── techContext.md           # Technologies and setup (always generated)
+│   ├── progress.md              # Status and milestones (always generated)
+│   ├── features/                # Optional: Only if user requests feature docs
+│   │   ├── authentication.md
+│   │   └── payment-system.md
+│   ├── integrations/            # Optional: Only if user requests integration docs
+│   │   ├── github-api.md
+│   │   └── stripe-integration.md
+│   ├── deployment/              # Optional: Only if user requests deployment docs
+│   │   ├── docker-setup.md
+│   │   └── aws-deployment.md
+│   └── [custom-folders]/        # Optional: User-defined semantic folders
+└── copilot-instructions.md      # Copilot configuration (always generated)
 ```
+
+**🎯 File Generation Strategy:**
+- **6 Core Files**: Always generated at memory bank root
+- **Additional Files**: Only generated when explicitly requested by user
+- **Semantic Folders**: Created automatically to organize additional files by purpose
+- **User-Driven**: No extra files created unless specifically asked for
 
 ## 🚀 Quick Start
 
@@ -169,24 +184,36 @@ You should see: ✅ All 5 MCP tools configured successfully!
 
 ## 🎯 Usage Examples
 
-### Basic Memory Bank Generation
+### Basic Memory Bank Generation (Standard Structure)
 ```
 User: "I'd like to generate a memory bank for my project"
 Server: "What's the root directory for your project?"
 User: "C:\MyProjects\WebApp"
 Server: "Would you like the standard structure or custom approach?"
 User: "Standard"
-Server: [Generates complete memory bank]
+Server: [Generates 6 core files only - no additional files unless requested]
 ```
 
-### Custom Memory Bank
+### Custom Memory Bank with Additional Files
 ```
 User: "Generate a memory bank focusing on API patterns"
 Server: "What's your project root directory?"
 User: "/home/user/api-service"
 Server: "Any specific focus areas?"
 User: "REST API patterns, authentication, error handling"
-Server: [Creates tailored memory bank with API focus]
+Server: "Would you like additional documentation files?"
+User: "Yes, I need API documentation and deployment guides"
+Server: [Creates core files + api/endpoints.md + deployment/procedures.md in semantic folders]
+```
+
+### Minimal Memory Bank (No Additional Files)
+```
+User: "Create a simple memory bank for my small project"
+Server: "What's your project root directory?"
+User: "/home/user/simple-app"
+Server: "Standard or custom structure?"
+User: "Standard, just the essentials"
+Server: [Generates only the 6 core files - clean and simple]
 ```
 
 ## 🎯 Benefits
