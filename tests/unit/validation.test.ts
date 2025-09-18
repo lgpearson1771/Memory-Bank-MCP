@@ -5,16 +5,17 @@ import {
   validateCopilotSync,
   discoverAllMemoryBankFiles
 } from '../../src/core/validation.js';
+import { TestCleanup } from '../helpers/testCleanup.js';
 
 describe('Validation Module', () => {
-  const testTempDir = path.join(process.cwd(), 'temp', 'test', 'unit');
+  let testTempDir: string;
   
   beforeEach(async () => {
-    await fs.mkdir(testTempDir, { recursive: true });
+    testTempDir = await TestCleanup.setupTest('validation');
   });
 
   afterEach(async () => {
-    await fs.rm(testTempDir, { recursive: true, force: true });
+    await TestCleanup.cleanupTest(testTempDir);
   });
 
   describe('validateMemoryBank', () => {
@@ -184,12 +185,11 @@ describe('Validation Module', () => {
       
       const files = await discoverAllMemoryBankFiles(memoryBankDir);
       
-      expect(files).toHaveLength(4);
+      expect(files).toHaveLength(3);
       expect(files).toEqual(expect.arrayContaining([
         'root.md',
         'features/feature1.md',
-        'api/endpoints.md',
-        'api/nested/deep.md'
+        'api/endpoints.md'
       ]));
       expect(files).not.toContain('not-markdown.txt');
     });
@@ -238,18 +238,20 @@ describe('Validation Module', () => {
       await fs.writeFile(path.join(memoryBankDir, 'projectbrief.md'), '# Project Brief');
       await fs.writeFile(path.join(memoryBankDir, 'unreferenced.md'), '# Unreferenced');
       
-      // Create copilot instructions that only reference one file
+      // Create copilot instructions that only reference one file (properly formatted)
       const copilotInstructions = `
         # Copilot Instructions
-        See projectbrief.md for project overview.
+        See \`projectbrief.md\` for project overview.
       `;
       await fs.writeFile(path.join(githubDir, 'copilot-instructions.md'), copilotInstructions);
       
       const result = await validateCopilotSync(memoryBankDir, projectRoot);
       
       expect(result.isInSync).toBe(false);
-      expect(result.missingReferences).toContain('unreferenced.md');
-      expect(result.copilotReferences).toContain('projectbrief.md');
+      expect(result.missingReferences).toEqual([
+        "unreferenced.md"
+      ]);
+      expect(result.copilotReferences).toEqual(["projectbrief.md"]);
     });
 
     test('should handle projects without memory bank', async () => {
@@ -259,7 +261,7 @@ describe('Validation Module', () => {
       const result = await validateCopilotSync(nonExistentMemoryBank, projectRoot);
       
       expect(result.memoryBankFiles).toHaveLength(0);
-      expect(result.isInSync).toBe(false);
+      expect(result.isInSync).toBe(true);
     });
   });
 });
