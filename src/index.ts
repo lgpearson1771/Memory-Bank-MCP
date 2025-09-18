@@ -13,15 +13,13 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import {
-  ensureMemoryBankDirectory,
-  analyzeProject,
-  generateMemoryBankFiles,
-  setupCopilotInstructions,
-  validateMemoryBank,
-  performInteractiveSyncResolution,
-  type MemoryBankOptions,
-} from './fileOperations.js';
+import { ensureMemoryBankDirectory } from './utils/fileUtils.js';
+import { analyzeProject } from './core/projectAnalysis.js';
+import { generateMemoryBankFiles, type MemoryBankOptions } from './core/memoryBankGenerator.js';
+import { validateMemoryBank } from './core/validation.js';
+import { setupCopilotInstructions } from './integrations/copilotIntegration.js';
+import { performInteractiveSyncResolution } from './interactions/syncResolution.js';
+import { analyzeProjectForConversation } from './interactions/conversational.js';
 
 /**
  * Create and start the MCP server
@@ -263,9 +261,6 @@ async function main() {
           const projectRootPath = (args as any).projectRootPath;
           const mode = (args as any).mode || 'analyze-first';
           const conversationalGuidance = (args as any).conversationalGuidance !== false;
-          
-          // Import the new conversational analysis function
-          const { analyzeProjectForConversation } = await import('./fileOperations.js');
           
           // For analyze-first mode or when conversational guidance is enabled, 
           // return conversational response instead of immediately generating

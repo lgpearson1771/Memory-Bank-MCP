@@ -2,7 +2,7 @@
 
 ## 🚀 Overview
 
-The Memory Bank Generator MCP Server provides 5 interactive tools for creating and managing memory banks with **intelligent semantic organization**. This guide will help you integrate it with Claude Desktop, VS Code, and other MCP-compatible clients.
+The Memory Bank Generator MCP Server provides 6 interactive tools for creating and managing memory banks with **intelligent semantic organization**. This guide will help you integrate it with Claude Desktop, VS Code, and other MCP-compatible clients.
 
 ## 🔧 Key Features
 

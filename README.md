@@ -75,15 +75,6 @@ When conflicts are detected between memory bank and Copilot instructions:
 - **Generates additional files only when explicitly requested** during conversational workflow
 - Sets up dynamic `copilot-instructions.md` that adapts to actual files generated
 
-### `resolve_sync_conflicts`
-**Interactive sync conflict resolution**
-- **Conflict Detection**: Identifies mismatches between memory bank files and Copilot instructions
-- **Resolution Workflow**: Step-by-step interactive process for conflict resolution
-- **User Choice Options**: Auto-resolve all, review individually, or cancel resolution
-- **Action Confirmation**: Requests user confirmation for each proposed fix
-- **Conversation Logging**: Tracks all user decisions and conversation steps for audit trail
-- **Multiple Conflict Types**: Handles missing references, orphaned references, and structure mismatches
-
 ### `analyze_project_structure`
 **Pre-generation analysis**
 - Analyzes project structure and complexity
@@ -264,7 +255,7 @@ npm test
    }
    ```
 
-3. **Restart Claude Desktop** - Your 5 MCP tools will be available!
+3. **Restart Claude Desktop** - Your 6 MCP tools will be available!
 
 #### For VS Code
 
@@ -292,7 +283,7 @@ npm test
 npm test
 ```
 
-You should see: ✅ All 5 MCP tools configured successfully!
+You should see: ✅ All 6 MCP tools configured successfully!
 
 ## 🎯 Usage Examples
 
@@ -426,8 +417,22 @@ Streamlined architecture focused on interactive workflow:
 
 ```typescript
 src/
-├── index.ts              # Main MCP server with 5 tools
-└── fileOperations.ts     # Real file system operations
+├── index.ts                      # Main MCP server with 6 tools
+├── core/                         # Core business logic
+│   ├── projectAnalysis.ts        # Project scanning and analysis
+│   ├── memoryBankGenerator.ts    # Memory bank file generation
+│   ├── semanticOrganization.ts   # Semantic folder organization  
+│   └── validation.ts             # Memory bank validation
+├── interactions/                 # User interaction workflows
+│   ├── conversational.ts         # Conversational analysis guidance
+│   └── syncResolution.ts         # Interactive sync conflict resolution
+├── integrations/                 # External tool integrations
+│   └── copilotIntegration.ts     # GitHub Copilot instructions setup
+├── utils/                        # Utility functions
+│   └── fileUtils.ts              # File system operations
+└── types/                        # Type definitions
+    ├── conversational.ts         # Conversational workflow types
+    └── sync.ts                   # Sync and conflict resolution types
 ```
 
 ## 🤝 Contributing
