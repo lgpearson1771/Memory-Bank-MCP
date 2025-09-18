@@ -384,7 +384,7 @@ export async function generateAdditionalFileContent(
 ${analysis.projectName} exposes APIs for core functionality.
 
 ### Framework Integration
-${analysis.frameworks.includes('Express.js') || analysis.frameworks.includes('Fastify') || analysis.frameworks.includes('NestJS') ? 
+${analysis.frameworks.includes('Express') || analysis.frameworks.includes('Express.js') || analysis.frameworks.includes('Fastify') || analysis.frameworks.includes('NestJS') ? 
   `API framework detected: ${analysis.frameworks.filter(fw => fw.includes('Express') || fw.includes('Fastify') || fw.includes('NestJS')).join(', ')}` :
   'API implementation follows standard patterns for the project type.'}
 
