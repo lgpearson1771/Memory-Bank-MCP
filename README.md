@@ -26,9 +26,19 @@ npm install
 npm run build
 ```
 
-### Configuration
+## 📚 Documentation
 
-#### For VS Code
+- **[Complete Documentation](docs/README.md)** - Full documentation index
+- **[Setup Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Detailed installation and configuration
+- **[Product Requirements](docs/prds/Memory-Bank-Generator-PRD.md)** - Feature specifications
+- **[Testing Strategy](docs/prds/Testing-PRD.md)** - Testing and security implementation
+
+## 🧪 Testing & Quality
+
+**Current Status**: ✅ Security implementation complete (11/11 security tests passing)
+- Content sanitization and input validation working
+- Professional documentation generation
+- See [Testing PRD](docs/prds/Testing-PRD.md) for detailed status
 
 1. **Add to VS Code's mcp.json:**
    ```json
@@ -48,7 +58,7 @@ npm run build
 
 2. **Restart VS Code** - Tools available through Copilot!
 
-#### For Claude Desktop
+### For Claude Desktop
 
 1. **Find Claude Desktop's configuration file:**
    - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`

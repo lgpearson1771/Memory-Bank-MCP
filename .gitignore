@@ -24,3 +24,8 @@ Thumbs.db
 
 # Demo and test projects
 demo-project/
+
+# Temporary files (in case they get created again)
+temp/
+debug-*.js
+test-*.js

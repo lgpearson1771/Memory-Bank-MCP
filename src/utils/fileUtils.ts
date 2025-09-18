@@ -17,8 +17,8 @@ export interface SemanticFolderInfo {
  * Ensure .github/memory-bank directory exists
  */
 export async function ensureMemoryBankDirectory(projectRoot: string): Promise<string> {
-  const githubDir = path.join(projectRoot, '.github');
-  const memoryBankDir = path.join(githubDir, 'memory-bank');
+  const memoryBankDir = path.join(projectRoot, '.github', 'memory-bank');
+  const githubDir = path.dirname(memoryBankDir);
   
   try {
     await fs.access(githubDir);

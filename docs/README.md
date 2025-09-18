@@ -4,10 +4,18 @@ This directory contains comprehensive documentation for the Memory Bank Generato
 
 ## 📚 Documentation Index
 
-### Core Documentation
+### 📋 Product Requirements Documents (PRDs)
+- **[Memory Bank Generator PRD](prds/Memory-Bank-Generator-PRD.md)** - Main product requirements and feature specifications
+- **[Testing PRD](prds/Testing-PRD.md)** - Testing strategy, security requirements, and implementation status
+
+### 🧪 Testing Documentation
+- **[Testing Strategy](testing/testing-strategy.md)** - Comprehensive testing approach and methodologies
+- **Security Testing** - Input validation and content sanitization testing (see Testing PRD)
+
+### 🏗️ Architecture & Integration
 - **[MCP Integration Guide](MCP_INTEGRATION_GUIDE.md)** - Complete setup and configuration instructions
 
-### Configuration Examples
+### 📁 Configuration Examples
 - **[examples/claude_desktop_config.json](examples/claude_desktop_config.json)** - Claude Desktop MCP configuration
 - **[examples/vscode_mcp_config.json](examples/vscode_mcp_config.json)** - VS Code MCP extension configuration
 
@@ -29,11 +37,17 @@ This directory contains comprehensive documentation for the Memory Bank Generato
 
 ```
 docs/
-├── README.md                    # This file - documentation index
-├── MCP_INTEGRATION_GUIDE.md     # Setup and troubleshooting guide
+├── README.md                       # This file - documentation index
+├── prds/                          # Product Requirements Documents
+│   ├── Memory-Bank-Generator-PRD.md  # Main PRD with feature specs
+│   └── Testing-PRD.md               # Testing strategy and security requirements
+├── testing/                       # Testing documentation
+│   └── testing-strategy.md          # Comprehensive testing approach
+├── architecture/                  # Technical architecture docs (planned)
+├── MCP_INTEGRATION_GUIDE.md        # Setup and troubleshooting guide
 └── examples/
-    ├── claude_desktop_config.json   # Claude Desktop configuration
-    └── vscode_mcp_config.json       # VS Code configuration
+    ├── claude_desktop_config.json    # Claude Desktop configuration
+    └── vscode_mcp_config.json        # VS Code configuration
 ```
 
 ## 🛠 Available MCP Tools

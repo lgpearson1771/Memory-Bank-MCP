@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ProjectAnalysis } from './projectAnalysis.js';
+import { securityValidator } from '../security/validation.js';
 
 /**
  * Memory Bank Generator Module
@@ -90,13 +91,22 @@ export async function generateFileContent(
 ): Promise<string> {
   const timestamp = new Date().toISOString();
   
+  // Sanitize the analysis data before using it in content generation
+  const sanitizedAnalysis = {
+    ...analysis,
+    projectName: securityValidator.escapeHtml(analysis.projectName),
+    description: securityValidator.filterDangerousCommands(
+      securityValidator.sanitizeMarkdown(analysis.description)
+    )
+  };
+  
   switch (fileName) {
     case 'projectbrief.md':
       return `# Project Brief
 
 ## Project Overview
-**${analysis.projectName}** (v${analysis.version})
-${analysis.description}
+**${sanitizedAnalysis.projectName}** (v${analysis.version})
+${sanitizedAnalysis.description}
 
 **Project Type:** ${analysis.projectType}
 **Complexity:** ${analysis.structure.complexity}
@@ -131,10 +141,10 @@ Generated: ${timestamp}
       return `# Product Context
 
 ## Purpose
-${analysis.description || 'This project serves specific business and technical requirements.'}
+${sanitizedAnalysis.description || 'This project serves specific business and technical requirements.'}
 
 ## Project Details
-- **Name:** ${analysis.projectName}
+- **Name:** ${sanitizedAnalysis.projectName}
 - **Version:** ${analysis.version}
 - **Type:** ${analysis.projectType}
 

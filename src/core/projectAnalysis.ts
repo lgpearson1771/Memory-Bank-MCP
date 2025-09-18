@@ -1,5 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { securityValidator } from '../security/validation.js';
 
 /**
  * Project Analysis Module
@@ -47,9 +48,12 @@ export interface ProjectAnalysis {
  */
 export async function analyzeProject(projectRoot: string, depth: 'shallow' | 'medium' | 'deep' = 'medium'): Promise<ProjectAnalysis> {
   try {
+    // Validate and sanitize the project root path
+    const sanitizedProjectRoot = securityValidator.sanitizeProjectPath(projectRoot);
+    
     // Read package.json for real project metadata
     let packageInfo: any = {
-      name: path.basename(projectRoot),
+      name: path.basename(sanitizedProjectRoot),
       description: '',
       version: '1.0.0',
       dependencies: {},
@@ -58,16 +62,19 @@ export async function analyzeProject(projectRoot: string, depth: 'shallow' | 'me
     };
 
     try {
-      const packagePath = path.join(projectRoot, 'package.json');
+      const packagePath = path.join(sanitizedProjectRoot, 'package.json');
       const packageContent = await fs.readFile(packagePath, 'utf-8');
-      packageInfo = { ...packageInfo, ...JSON.parse(packageContent) };
+      const rawPackageInfo = JSON.parse(packageContent);
+      
+      // Sanitize package.json content before using it
+      packageInfo = { ...packageInfo, ...securityValidator.validatePackageJson(rawPackageInfo) };
     } catch (error) {
       // No package.json or parsing error - use defaults
     }
 
-    // Scan source files and directories
-    const sourceAnalysis = await scanSourceFiles(projectRoot, depth);
-    const rootFiles = await fs.readdir(projectRoot);
+    // Scan source files and directories (using sanitized path)
+    const sourceAnalysis = await scanSourceFiles(sanitizedProjectRoot, depth);
+    const rootFiles = await fs.readdir(sanitizedProjectRoot);
     
     // Extract real dependency data
     const allDependencies = { ...packageInfo.dependencies, ...packageInfo.devDependencies };
@@ -98,7 +105,7 @@ export async function analyzeProject(projectRoot: string, depth: 'shallow' | 'me
     return {
       projectType,
       projectName: packageInfo.name || path.basename(projectRoot),
-      description: packageInfo.description || 'A software project',
+      description: securityValidator.sanitizeMarkdown(packageInfo.description || 'A software project'),
       version: packageInfo.version || '1.0.0',
       structure: {
         rootFiles,
