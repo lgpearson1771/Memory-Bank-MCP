@@ -259,7 +259,7 @@ describe('Memory Bank Generator Module', () => {
       await fs.mkdir(memoryBankDir, { recursive: true });
       
       const options: MemoryBankOptions = {
-        structureType: 'standard',
+        structureType: 'enhanced',
         detailLevel: 'detailed',
         focusAreas: ['features', 'api'],
         additionalFiles: ['features', 'api'],
@@ -291,7 +291,7 @@ describe('Memory Bank Generator Module', () => {
       await fs.mkdir(memoryBankDir, { recursive: true });
       
       const options: MemoryBankOptions = {
-        structureType: 'standard',
+        structureType: 'enhanced',
         detailLevel: 'detailed',
         focusAreas: ['features'],
         additionalFiles: ['features'],
@@ -341,7 +341,7 @@ describe('Memory Bank Generator Module', () => {
       await fs.mkdir(memoryBankDir, { recursive: true });
       
       const options: MemoryBankOptions = {
-        structureType: 'standard',
+        structureType: 'enhanced',
         detailLevel: 'detailed',
         focusAreas: ['custom'],
         additionalFiles: ['custom'],

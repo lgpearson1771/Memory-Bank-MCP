@@ -10,7 +10,7 @@ import { cleanupPreviousMemoryBankFiles } from '../utils/fileUtils.js';
  */
 
 export interface MemoryBankOptions {
-  structureType: 'standard' | 'custom';
+  structureType: 'standard' | 'enhanced' | 'custom';
   focusAreas: string[];
   detailLevel: 'high-level' | 'detailed' | 'granular';
   additionalFiles: string[];
