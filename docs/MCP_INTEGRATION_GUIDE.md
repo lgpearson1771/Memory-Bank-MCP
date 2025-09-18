@@ -2,12 +2,12 @@
 
 ## 🚀 Overview
 
-The Memory Bank Generator MCP Server provides 6 interactive tools for creating and managing memory banks with **intelligent semantic organization**. This guide will help you integrate it with Claude Desktop, VS Code, and other MCP-compatible clients.
+The Memory Bank Generator MCP Server provides 6 tools for creating and managing memory banks with **intelligent semantic organization**. This guide will help you integrate it with Claude Desktop, VS Code, and other MCP-compatible clients.
 
 ## 🔧 Key Features
 
 - **Semantic Organization**: Smart categorization of files into purpose-based folders
-- **Dynamic Copilot Integration**: Instructions automatically adapt to memory bank structure
+- **GitHub Copilot Integration**: Instructions automatically adapt to memory bank structure
 - **Interactive Workflow**: User-guided customization for project-specific needs
 - **Comprehensive Validation**: Sync checking between memory bank and Copilot instructions
 - **Flexible Structure**: Choice between semantic organization and flat structure
@@ -88,14 +88,14 @@ The Memory Bank Generator MCP Server provides 6 interactive tools for creating a
 
 ## 🛠️ Available MCP Tools
 
-Once configured, you'll have access to these **6** interactive tools:
+Once configured, you'll have access to these **6** tools:
 
 ### 1. `generate_memory_bank`
 **Interactive memory bank generation with semantic organization**
 - Choose between semantic organization (default) or flat structure
 - Smart categorization of additional files into purpose-based folders
-- User-driven generation - only creates files you explicitly request
-- Automatic dynamic Copilot integration
+- User-driven generation based on project needs
+- Automatic GitHub Copilot integration
 
 **Example Usage:**
 ```
@@ -127,15 +127,15 @@ Result: Core files + semantic folders (features/, integrations/, etc.) if reques
 - Interactive mode for detailed conflict analysis
 
 ### 5. `resolve_sync_conflicts`
-**🆕 Interactive sync conflict resolution**
-- **Conversational workflow** for resolving sync conflicts between memory bank and Copilot instructions
-- **Multi-step user interaction** with detailed conflict analysis and impact assessment
-- **Auto-resolution options** for low-risk conflicts that can be safely fixed automatically
-- **Manual review mode** with per-conflict confirmation for high-impact changes
-- **Complete audit trail** of user choices, actions taken, and conversation log
-- **Final validation** and status reporting after resolution attempts
+**Interactive sync conflict resolution**
+- User-guided workflow for resolving sync conflicts between memory bank and Copilot instructions
+- Multi-step interaction with detailed conflict analysis and impact assessment
+- Auto-resolution options for low-risk conflicts that can be safely fixed automatically
+- Manual review mode with per-conflict confirmation for high-impact changes
+- Complete audit trail of actions taken and conversation log
+- Final validation and status reporting after resolution attempts
 
-**Example Conversational Flow:**
+**Example Workflow:**
 ```
 Tool: "🔍 Sync Conflict Analysis - 3 unreferenced files detected (medium severity)"
 Tool: "How would you like to resolve these conflicts?"
@@ -147,7 +147,7 @@ Tool: "✅ Reference added. Moving to next conflict..."
 ```
 
 ### 6. `setup_copilot_instructions`
-**Dynamic Copilot integration**
+**GitHub Copilot integration**
 - Creates/updates `copilot-instructions.md` based on actual memory bank structure
 - Automatically discovers semantic folders and files
 - Real-time status indicators (✅/❌) for core files
@@ -181,7 +181,7 @@ mcp-client connect memory-bank-generator
 
 ## 🔧 Troubleshooting
 
-### Common Issues:
+### Common Issues
 
 1. **Server not starting:**
    - Ensure `npm run build` completes successfully
@@ -197,7 +197,7 @@ mcp-client connect memory-bank-generator
    - Ensure the AI assistant has permission to execute Node.js
    - Check file paths are correct and accessible
 
-### Debug Commands:
+### Debug Commands
 ```bash
 # Test compilation
 npm run build
@@ -214,7 +214,7 @@ node scripts/test-server.js
 When working correctly, you should see:
 
 1. **In AI Assistant:**
-   - 6 new tools available: analyze_project, generate_memory_bank, resolve_sync_conflicts, etc.
+   - 6 tools available: analyze_project, generate_memory_bank, resolve_sync_conflicts, etc.
    - Tool descriptions and parameters
    - Ability to call tools and get responses
 
@@ -239,4 +239,4 @@ When working correctly, you should see:
 
 ---
 
-Your MCP server is ready for integration! 🎉
+The MCP server is ready for integration! 🎉
