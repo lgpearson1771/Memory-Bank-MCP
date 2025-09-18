@@ -7,7 +7,9 @@
 >
 > 2025 Microsoft Hackathon Project - Luke Pearson
 
-![Memory Bank Generator MCP](docs\assets\MemoryBankMCPServerLogo.png)
+<div align="center">
+  <img src="docs/assets/MemoryBankMCPServerLogo.png" alt="Memory Bank Generator MCP Logo" width="700" height="700">
+</div>
 
 An MCP server that creates comprehensive memory banks for AI assistants like GitHub Copilot. Point it at your project, and it generates structured documentation that helps Copilot understand your codebase better.
 
