@@ -140,3 +140,132 @@ export async function countFiles(dir: string, maxDepth: number, currentDepth = 0
     return 0;
   }
 }
+
+/**
+ * Clean up previous memory bank files before regeneration
+ * Preserves core files and custom user files
+ */
+export async function cleanupPreviousMemoryBankFiles(memoryBankDir: string): Promise<void> {
+  try {
+    const coreFiles = new Set([
+      'projectbrief.md',
+      'productContext.md',
+      'activeContext.md',
+      'systemPatterns.md',
+      'techContext.md',
+      'progress.md'
+    ]);
+
+    const entries = await fs.readdir(memoryBankDir, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const entryPath = path.join(memoryBankDir, entry.name);
+      
+      if (entry.isFile()) {
+        // Remove files that are not core files and appear to be auto-generated
+        if (!coreFiles.has(entry.name) && entry.name.endsWith('.md')) {
+          // Check if this is likely a generated file (not custom)
+          const content = await fs.readFile(entryPath, 'utf-8');
+          if (isLikelyGeneratedFile(content, entry.name)) {
+            await fs.unlink(entryPath);
+          }
+        }
+      } else if (entry.isDirectory()) {
+        // Remove semantic folders that contain generated files
+        if (await isSemanticFolder(entryPath)) {
+          await fs.rm(entryPath, { recursive: true, force: true });
+        }
+      }
+    }
+  } catch (error) {
+    // Ignore cleanup errors to prevent breaking generation
+    console.warn('Warning: Memory bank cleanup failed:', error);
+  }
+}
+
+/**
+ * Check if a file appears to be auto-generated
+ */
+function isLikelyGeneratedFile(content: string, filename: string): boolean {
+  // Look for indicators that this is a generated file
+  const generatedIndicators = [
+    'Generated:',
+    'Last Updated:',
+    'Auto-generated',
+    // Common semantic folder file patterns
+    'api-overview',
+    'api-reference',
+    'api-docs',
+    'testing-strategy',
+    'testing-guide',
+    'testing-framework',
+    'deployment-guide',
+    'security-guide',
+    'feature-overview',
+    'integrations-guide'
+  ];
+  
+  // Check content for generation indicators
+  const hasGeneratedMarkers = generatedIndicators.some(indicator => 
+    content.includes(indicator) || filename.includes(indicator)
+  );
+  
+  // Exclude files that seem to be custom (contain user-specific content)
+  const customIndicators = [
+    'custom',
+    'team',
+    'user',
+    'notes',
+    'decisions',
+    'meeting',
+    'scratch',
+    'todo'
+  ];
+  
+  const seemsCustom = customIndicators.some(indicator => 
+    filename.toLowerCase().includes(indicator)
+  );
+  
+  return hasGeneratedMarkers && !seemsCustom;
+}
+
+/**
+ * Check if a directory is a semantic folder containing generated files
+ */
+async function isSemanticFolder(dirPath: string): Promise<boolean> {
+  try {
+    const folderName = path.basename(dirPath);
+    
+    // Known semantic folder names
+    const semanticFolderNames = [
+      'api', 'features', 'integrations', 'deployment', 
+      'security', 'testing', 'documentation'
+    ];
+    
+    if (!semanticFolderNames.includes(folderName)) {
+      return false;
+    }
+    
+    // Check if folder contains generated files
+    const files = await fs.readdir(dirPath);
+    if (files.length === 0) {
+      return true; // Empty semantic folder can be removed
+    }
+    
+    // Check if most files in the folder appear to be generated
+    let generatedCount = 0;
+    for (const file of files) {
+      if (file.endsWith('.md')) {
+        const content = await fs.readFile(path.join(dirPath, file), 'utf-8');
+        if (isLikelyGeneratedFile(content, file)) {
+          generatedCount++;
+        }
+      }
+    }
+    
+    // Remove folder if most files appear to be generated
+    return generatedCount > files.length / 2;
+  } catch {
+    return false;
+  }
+}

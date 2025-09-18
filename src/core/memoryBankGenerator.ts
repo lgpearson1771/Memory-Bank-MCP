@@ -2,6 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ProjectAnalysis } from './projectAnalysis.js';
 import { securityValidator } from '../security/validation.js';
+import { cleanupPreviousMemoryBankFiles } from '../utils/fileUtils.js';
 
 /**
  * Memory Bank Generator Module
@@ -35,6 +36,9 @@ export async function generateMemoryBankFiles(
   options: MemoryBankOptions
 ): Promise<string[]> {
   const createdFiles: string[] = [];
+  
+  // Clean up previous files to avoid conflicts during structure transitions
+  await cleanupPreviousMemoryBankFiles(memoryBankDir);
   
   // Core files that are always created at root level
   const coreFiles = [
