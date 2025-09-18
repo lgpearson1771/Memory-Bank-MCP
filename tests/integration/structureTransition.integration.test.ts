@@ -272,4 +272,85 @@ describe('Memory Bank Structure Transition Integration', () => {
     expect(validationResult.isValid).toBe(true);
     expect(validationResult.missingFiles).toHaveLength(0);
   });
+
+  test('should remove ALL additional files when transitioning from enhanced to standard structure', async () => {
+    const projectRoot = await createTestProject('enhanced-to-standard-actual-bug');
+    const memoryBankDir = await ensureMemoryBankDirectory(projectRoot);
+    
+    const analysis = await analyzeProject(projectRoot);
+    
+    // Step 1: Generate enhanced structure with additional files and semantic organization
+    const enhancedOptions: MemoryBankOptions = {
+      structureType: 'standard',
+      focusAreas: ['api', 'testing', 'deployment'],
+      detailLevel: 'detailed',
+      additionalFiles: ['api-overview.md', 'testing-strategy.md', 'deployment-guide.md', 'feature-specs.md'],
+      semanticOrganization: true
+    };
+    
+    await generateMemoryBankFiles(memoryBankDir, analysis, enhancedOptions);
+    await setupCopilotInstructions(projectRoot);
+    
+    // Verify enhanced structure was created
+    const enhancedFiles = await fs.readdir(memoryBankDir);
+    console.log('Enhanced structure files:', enhancedFiles);
+    
+    // Should have core files + additional files/folders
+    expect(enhancedFiles.length).toBeGreaterThan(6); // More than just core files
+    
+    // Check copilot instructions references enhanced structure
+    let copilotContent = await fs.readFile(path.join(projectRoot, '.github', 'copilot-instructions.md'), 'utf-8');
+    const initialCopilotLength = copilotContent.length;
+    
+    // Step 2: Switch to standard structure with NO additional files (this is the bug scenario)
+    const standardOptions: MemoryBankOptions = {
+      structureType: 'standard',
+      focusAreas: ['architecture'], // Different focus areas
+      detailLevel: 'detailed',
+      additionalFiles: [], // NO additional files - this is key!
+      semanticOrganization: false
+    };
+    
+    await generateMemoryBankFiles(memoryBankDir, analysis, standardOptions);
+    await setupCopilotInstructions(projectRoot);
+    
+    // Verify ONLY core files remain
+    const standardFiles = await fs.readdir(memoryBankDir);
+    console.log('Standard structure files after transition:', standardFiles);
+    
+    // Should have EXACTLY 6 core files and nothing else
+    expect(standardFiles).toHaveLength(6);
+    expect(standardFiles).toContain('projectbrief.md');
+    expect(standardFiles).toContain('productContext.md');
+    expect(standardFiles).toContain('activeContext.md');
+    expect(standardFiles).toContain('systemPatterns.md');
+    expect(standardFiles).toContain('techContext.md');
+    expect(standardFiles).toContain('progress.md');
+    
+    // Should NOT contain any additional files
+    expect(standardFiles).not.toContain('api-overview.md');
+    expect(standardFiles).not.toContain('testing-strategy.md');
+    expect(standardFiles).not.toContain('deployment-guide.md');
+    expect(standardFiles).not.toContain('feature-specs.md');
+    
+    // Should NOT contain any semantic folders
+    for (const file of standardFiles) {
+      const stat = await fs.stat(path.join(memoryBankDir, file));
+      expect(stat.isFile()).toBe(true); // All entries should be files, no folders
+    }
+    
+    // Verify copilot instructions were updated and don't reference removed files
+    copilotContent = await fs.readFile(path.join(projectRoot, '.github', 'copilot-instructions.md'), 'utf-8');
+    expect(copilotContent).not.toContain('api-overview.md');
+    expect(copilotContent).not.toContain('testing-strategy.md');
+    expect(copilotContent).not.toContain('deployment-guide.md');
+    expect(copilotContent).not.toContain('feature-specs.md');
+    
+    // Should still reference core files
+    expect(copilotContent).toContain('projectbrief.md');
+    expect(copilotContent).toContain('productContext.md');
+    
+    // Copilot instructions should be shorter now (less files to reference)
+    expect(copilotContent.length).toBeLessThan(initialCopilotLength);
+  });
 });
