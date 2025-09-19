@@ -8,7 +8,6 @@ import { generateMemoryBankTool } from './generateMemoryBank.js';
 import { updateMemoryBankTool, handleUpdateMemoryBank } from './updateMemoryBank.js';
 import { analyzeProjectStructureTool, handleAnalyzeProjectStructure } from './analyzeProjectStructure.js';
 import { validateMemoryBankTool, handleValidateMemoryBank } from './validateMemoryBank.js';
-import { resolveSyncConflictsTool, handleResolveSyncConflicts } from './resolveSyncConflicts.js';
 import { setupCopilotInstructionsTool, handleSetupCopilotInstructions } from './setupCopilotInstructions.js';
 
 // Re-export everything
@@ -16,7 +15,6 @@ export { generateMemoryBankTool } from './generateMemoryBank.js';
 export { updateMemoryBankTool, handleUpdateMemoryBank } from './updateMemoryBank.js';
 export { analyzeProjectStructureTool, handleAnalyzeProjectStructure } from './analyzeProjectStructure.js';
 export { validateMemoryBankTool, handleValidateMemoryBank } from './validateMemoryBank.js';
-export { resolveSyncConflictsTool, handleResolveSyncConflicts } from './resolveSyncConflicts.js';
 export { setupCopilotInstructionsTool, handleSetupCopilotInstructions } from './setupCopilotInstructions.js';
 
 // Collect all tools for easy export
@@ -25,7 +23,6 @@ export const allTools = [
   updateMemoryBankTool,
   analyzeProjectStructureTool,
   validateMemoryBankTool,
-  resolveSyncConflictsTool,
   setupCopilotInstructionsTool
 ];
 
@@ -35,6 +32,5 @@ export const toolHandlers = {
   'update_memory_bank': handleUpdateMemoryBank,
   'analyze_project_structure': handleAnalyzeProjectStructure,
   'validate_memory_bank': handleValidateMemoryBank,
-  'resolve_sync_conflicts': handleResolveSyncConflicts,
   'setup_copilot_instructions': handleSetupCopilotInstructions
 };

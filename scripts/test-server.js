@@ -15,7 +15,6 @@ try {
   console.log('   - update_memory_bank'); 
   console.log('   - analyze_project_structure');
   console.log('   - validate_memory_bank');
-  console.log('   - resolve_sync_conflicts');
   console.log('   - setup_copilot_instructions');
   console.log('✅ All expected tools are configured');
   console.log('✅ MCP Server test completed successfully!');
