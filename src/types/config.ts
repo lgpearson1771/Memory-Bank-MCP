@@ -2,7 +2,7 @@
  * Core configuration types for Memory Bank Generator MCP Server
  */
 
-export interface MemoryBankConfig {
+export interface MCPServerConfig {
   /** Base path where memory banks will be stored */
   memoryBankPath: string;
   /** Path to memory bank templates */
@@ -624,12 +624,12 @@ export interface ProjectMetrics {
   /** Number of dependencies */
   numberOfDependencies: number;
   /** Complexity metrics */
-  complexity?: ComplexityMetrics;
+  complexity?: CodeComplexityMetrics;
   /** Quality metrics */
   quality?: QualityMetrics;
 }
 
-export interface ComplexityMetrics {
+export interface CodeComplexityMetrics {
   /** Cyclomatic complexity */
   cyclomaticComplexity?: number;
   /** Cognitive complexity */
@@ -773,7 +773,7 @@ export type TimePeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
  * Validation types
  */
 
-export interface ValidationResult {
+export interface ConfigValidationResult {
   /** Whether validation passed */
   isValid: boolean;
   /** Validation score (0-100) */
