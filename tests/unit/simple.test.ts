@@ -1,4 +1,4 @@
-import { validateMemoryBank } from '../../src/core/validation.js';
+import { validateMemoryBank } from '../../dist/core/validation.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
