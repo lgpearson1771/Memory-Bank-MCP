@@ -6,7 +6,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as ts from 'typescript';
-import { securityValidator } from '../security/validation.js';
+import { securityValidator } from '../security/validation';
 
 // Core AST interface
 export interface AbstractSyntaxTree {
@@ -1497,5 +1497,627 @@ class UniversalAnalyzer extends LanguageAnalyzer {
   async parse(content: string, _filePath: string): Promise<any> {
     // TODO: Implement Tree-sitter universal parsing
     return { type: 'universal-ast', content: content.length };
+  }
+}
+
+// Semantic Relationship Mapping Interfaces
+export interface DependencyNode {
+  filePath: string;
+  exports: { name: string; type: string; isDefault: boolean }[];
+  imports: { source: string; items: string[]; type: string; isExternal: boolean }[];
+  functions: { name: string; isExported: boolean; complexity: number; callsExternal: boolean }[];
+  classes: { name: string; isExported: boolean; methodCount: number; extendsTypes: string[]; implementsTypes: string[] }[];
+  dependents: { sourceFile: string; exportedItems: string[]; dependencyType: string }[];
+  dependencies: { targetFile: string; importedItems: string[]; importType: string; strength: number }[];
+  cycleRisk: number;
+  importance: number;
+}
+
+export interface ComponentInteraction {
+  sourceComponent: string;
+  targetComponent: string;
+  interactionType: string;
+  sourceFile: string;
+  targetFile: string;
+  strength: number;
+  dataFlow: string[];
+}
+
+export interface DataFlowPath {
+  startComponent: string;
+  endComponent: string;
+  dataType: string;
+  transformations: string[];
+  filePath: string;
+  confidence: number;
+}
+
+export interface CommunicationPattern {
+  patternType: string;
+  frequency: number;
+  components: string[];
+  description: string;
+}
+
+export interface StronglyConnectedComponent {
+  id: string;
+  files: string[];
+  cycleRisk: number;
+  refactoringPriority: number;
+}
+
+/**
+ * Semantic Relationship Mapping Engine
+ * Maps dependencies, data flow, and architectural relationships between components
+ */
+export class SemanticRelationshipMapper {
+  private dependencyGraph: Map<string, DependencyNode> = new Map();
+  private componentInteractions: ComponentInteraction[] = [];
+  private dataFlowPaths: DataFlowPath[] = [];
+  private architecturalPatterns: ArchitecturalPattern[] = [];
+
+  /**
+   * Build comprehensive relationship mapping from parsed files
+   */
+  async buildRelationshipGraph(parsedFiles: ParsedFile[], _codeAnalysis: CodeAnalysisResult): Promise<RelationshipGraph> {
+    try {
+      // 1. Build dependency graph from imports/exports
+      this.buildDependencyGraph(parsedFiles);
+      
+      // 2. Map component interactions
+      this.mapComponentInteractions(parsedFiles);
+      
+      // 3. Analyze data flow patterns
+      this.analyzeDataFlow(parsedFiles);
+      
+      // 4. Detect architectural patterns
+      this.detectArchitecturalPatterns(parsedFiles);
+      
+      // 5. Identify critical paths and strongly connected components
+      const criticalPaths = this.findCriticalPaths();
+      const stronglyConnectedComponents = this.findStronglyConnectedComponents();
+      
+      // 6. Map architectural layers
+      const architecturalLayers = this.mapArchitecturalLayers(parsedFiles);
+
+      return {
+        // Convert DependencyNode to DependencyEdge
+        dependencies: this.convertToDependencyEdges(),
+        // Convert DataFlowPath to DataFlowEdge
+        dataFlow: this.convertToDataFlowEdges(),
+        // Convert CommunicationPattern to CommunicationEdge
+        communicationPatterns: this.convertToCommunicationEdges(),
+        stronglyConnectedComponents,
+        criticalPaths,
+        architecturalLayers
+      };
+      
+    } catch (error) {
+      console.error('Relationship mapping failed:', error);
+      return {
+        dependencies: [],
+        dataFlow: [],
+        communicationPatterns: [],
+        stronglyConnectedComponents: [],
+        criticalPaths: [],
+        architecturalLayers: []
+      };
+    }
+  }
+
+  /**
+   * Build dependency graph from import/export analysis
+   */
+  private buildDependencyGraph(parsedFiles: ParsedFile[]): void {
+    // First pass: Create nodes for all files
+    for (const file of parsedFiles) {
+      if (file.parseSuccess && file.ast && file.ast.type === 'typescript-ast') {
+        const tsAnalysis = file.ast as TypeScriptAnalysisResult;
+        
+        const node: DependencyNode = {
+          filePath: file.filePath,
+          exports: tsAnalysis.exports.map(exp => ({
+            name: exp.exportedItems.join(', '),
+            type: exp.exportType,
+            isDefault: exp.exportType === 'default'
+          })),
+          imports: tsAnalysis.imports.map(imp => ({
+            source: imp.modulePath,
+            items: imp.importedItems,
+            type: imp.importType,
+            isExternal: imp.isExternal
+          })),
+          functions: tsAnalysis.functions.map(func => ({
+            name: func.name,
+            isExported: func.isExported,
+            complexity: func.complexity,
+            callsExternal: this.detectExternalCalls(func, tsAnalysis)
+          })),
+          classes: tsAnalysis.classes.map(cls => ({
+            name: cls.name,
+            isExported: cls.isExported,
+            methodCount: cls.methods.length,
+            extendsTypes: cls.extendsTypes,
+            implementsTypes: cls.implementsTypes
+          })),
+          dependents: [],
+          dependencies: [],
+          cycleRisk: 0,
+          importance: 0
+        };
+        
+        this.dependencyGraph.set(file.filePath, node);
+      }
+    }
+
+    // Second pass: Build relationships
+    for (const [filePath, node] of this.dependencyGraph) {
+      for (const imp of node.imports) {
+        if (!imp.isExternal) {
+          // Resolve relative imports to absolute paths
+          const resolvedPath = this.resolveImportPath(filePath, imp.source);
+          const targetNode = this.dependencyGraph.get(resolvedPath);
+          
+          if (targetNode) {
+            node.dependencies.push({
+              targetFile: resolvedPath,
+              importedItems: imp.items,
+              importType: imp.type,
+              strength: this.calculateDependencyStrength(imp)
+            });
+            
+            targetNode.dependents.push({
+              sourceFile: filePath,
+              exportedItems: imp.items,
+              dependencyType: imp.type
+            });
+          }
+        }
+      }
+    }
+
+    // Third pass: Calculate importance and cycle risk
+    for (const node of this.dependencyGraph.values()) {
+      node.importance = this.calculateNodeImportance(node);
+      node.cycleRisk = this.calculateCycleRisk(node);
+    }
+  }
+
+  /**
+   * Map component interactions for architectural understanding
+   */
+  private mapComponentInteractions(parsedFiles: ParsedFile[]): void {
+    this.componentInteractions = [];
+
+    for (const file of parsedFiles) {
+      if (file.parseSuccess && file.ast && file.ast.type === 'typescript-ast') {
+        const tsAnalysis = file.ast as TypeScriptAnalysisResult;
+        
+        // Map function call relationships
+        for (const func of tsAnalysis.functions) {
+          const interactions = this.extractFunctionInteractions(func, tsAnalysis, file.filePath);
+          this.componentInteractions.push(...interactions);
+        }
+        
+        // Map class relationships
+        for (const cls of tsAnalysis.classes) {
+          const interactions = this.extractClassInteractions(cls, file.filePath);
+          this.componentInteractions.push(...interactions);
+        }
+        
+        // Map React component interactions
+        for (const component of tsAnalysis.components) {
+          const interactions = this.extractComponentInteractions(component, file.filePath);
+          this.componentInteractions.push(...interactions);
+        }
+      }
+    }
+  }
+
+  /**
+   * Analyze data flow patterns through the application
+   */
+  private analyzeDataFlow(parsedFiles: ParsedFile[]): void {
+    this.dataFlowPaths = [];
+
+    for (const file of parsedFiles) {
+      if (file.parseSuccess && file.ast && file.ast.type === 'typescript-ast') {
+        const tsAnalysis = file.ast as TypeScriptAnalysisResult;
+        
+        // Analyze function parameter flows
+        for (const func of tsAnalysis.functions) {
+          const flowPaths = this.extractFunctionDataFlow(func, file.filePath);
+          this.dataFlowPaths.push(...flowPaths);
+        }
+        
+        // Analyze API endpoint data flows
+        for (const route of tsAnalysis.routes) {
+          const flowPaths = this.extractRouteDataFlow(route, file.filePath);
+          this.dataFlowPaths.push(...flowPaths);
+        }
+        
+        // Analyze React component prop flows
+        for (const component of tsAnalysis.components) {
+          const flowPaths = this.extractComponentDataFlow(component, file.filePath);
+          this.dataFlowPaths.push(...flowPaths);
+        }
+      }
+    }
+  }
+
+  /**
+   * Detect architectural patterns from relationship analysis
+   */
+  private detectArchitecturalPatterns(parsedFiles: ParsedFile[]): void {
+    this.architecturalPatterns = [];
+
+    // Detect MVC pattern
+    const mvcPattern = this.detectMVCPattern(parsedFiles);
+    if (mvcPattern) this.architecturalPatterns.push(mvcPattern);
+
+    // Detect Microservices pattern
+    const microservicesPattern = this.detectMicroservicesPattern(parsedFiles);
+    if (microservicesPattern) this.architecturalPatterns.push(microservicesPattern);
+
+    // Detect Repository pattern
+    const repositoryPattern = this.detectRepositoryPattern(parsedFiles);
+    if (repositoryPattern) this.architecturalPatterns.push(repositoryPattern);
+
+    // Detect Service Layer pattern
+    const serviceLayerPattern = this.detectServiceLayerPattern(parsedFiles);
+    if (serviceLayerPattern) this.architecturalPatterns.push(serviceLayerPattern);
+  }
+
+  // Helper methods
+  private resolveImportPath(fromFile: string, importPath: string): string {
+    // Simplified path resolution
+    if (importPath.startsWith('./') || importPath.startsWith('../')) {
+      const fromDir = fromFile.substring(0, fromFile.lastIndexOf('/'));
+      return importPath.replace(/^\.\//, fromDir + '/').replace(/\.\.\//g, '');
+    }
+    return importPath;
+  }
+
+  private calculateDependencyStrength(imp: { items: string[]; type: string }): number {
+    const baseStrength = imp.type === 'default' ? 0.8 : 0.6;
+    const itemBonus = Math.min(imp.items.length * 0.1, 0.4);
+    return Math.min(baseStrength + itemBonus, 1.0);
+  }
+
+  private calculateNodeImportance(node: DependencyNode): number {
+    const dependentWeight = node.dependents.length * 0.3;
+    const exportWeight = node.exports.length * 0.2;
+    const complexityWeight = node.functions.reduce((sum, f) => sum + f.complexity, 0) * 0.1;
+    return dependentWeight + exportWeight + complexityWeight;
+  }
+
+  private calculateCycleRisk(node: DependencyNode): number {
+    return node.dependencies.length > 0 && node.dependents.length > 0 ? 0.7 : 0.0;
+  }
+
+  private detectExternalCalls(_func: TSFunctionAnalysis, analysis: TypeScriptAnalysisResult): boolean {
+    return analysis.dependencies.length > 0;
+  }
+
+  // Converter methods for interface alignment
+  private convertToDependencyEdges(): DependencyEdge[] {
+    const edges: DependencyEdge[] = [];
+    
+    for (const node of this.dependencyGraph.values()) {
+      for (const dep of node.dependencies) {
+        edges.push({
+          source: node.filePath,
+          target: dep.targetFile,
+          type: dep.importType,
+          strength: dep.strength
+        });
+      }
+    }
+    
+    return edges;
+  }
+
+  private convertToDataFlowEdges(): DataFlowEdge[] {
+    return this.dataFlowPaths.map(path => ({
+      source: path.startComponent,
+      target: path.endComponent,
+      dataType: path.dataType,
+      volume: path.transformations.length > 2 ? 'high' : 'medium'
+    }));
+  }
+
+  private convertToCommunicationEdges(): CommunicationEdge[] {
+    return this.componentInteractions.map(interaction => ({
+      source: interaction.sourceComponent,
+      target: interaction.targetComponent,
+      protocol: interaction.interactionType,
+      frequency: interaction.strength > 0.7 ? 'high' : 'medium'
+    }));
+  }
+
+  private extractFunctionInteractions(func: TSFunctionAnalysis, _analysis: TypeScriptAnalysisResult, filePath: string): ComponentInteraction[] {
+    return [{
+      sourceComponent: func.name,
+      targetComponent: 'external',
+      interactionType: 'function_call',
+      sourceFile: filePath,
+      targetFile: '',
+      strength: 0.5,
+      dataFlow: func.parameters.map(p => p.name)
+    }];
+  }
+
+  private extractClassInteractions(cls: TSClassAnalysis, filePath: string): ComponentInteraction[] {
+    return cls.extendsTypes.map(baseType => ({
+      sourceComponent: cls.name,
+      targetComponent: baseType,
+      interactionType: 'inheritance',
+      sourceFile: filePath,
+      targetFile: '',
+      strength: 0.9,
+      dataFlow: []
+    }));
+  }
+
+  private extractComponentInteractions(component: TSComponentAnalysis, filePath: string): ComponentInteraction[] {
+    return [{
+      sourceComponent: component.name,
+      targetComponent: 'props',
+      interactionType: 'data_binding',
+      sourceFile: filePath,
+      targetFile: '',
+      strength: 0.6,
+      dataFlow: component.props
+    }];
+  }
+
+  private extractFunctionDataFlow(func: TSFunctionAnalysis, filePath: string): DataFlowPath[] {
+    return [{
+      startComponent: 'input',
+      endComponent: func.name,
+      dataType: func.parameters.map(p => p.type).join(', '),
+      transformations: ['validation', 'processing'],
+      filePath,
+      confidence: 0.8
+    }];
+  }
+
+  private extractRouteDataFlow(route: TSRouteAnalysis, filePath: string): DataFlowPath[] {
+    return [{
+      startComponent: 'client',
+      endComponent: `${route.method} ${route.path}`,
+      dataType: 'HTTP Request',
+      transformations: ['serialization', 'validation', 'processing'],
+      filePath,
+      confidence: 0.9
+    }];
+  }
+
+  private extractComponentDataFlow(component: TSComponentAnalysis, filePath: string): DataFlowPath[] {
+    return [{
+      startComponent: 'parent',
+      endComponent: component.name,
+      dataType: 'props',
+      transformations: ['prop_passing', 'rendering'],
+      filePath,
+      confidence: 0.7
+    }];
+  }
+
+  // Pattern detection methods
+  private detectMVCPattern(parsedFiles: ParsedFile[]): ArchitecturalPattern | null {
+    const hasModels = parsedFiles.some(f => f.filePath.includes('model') || f.filePath.includes('Model'));
+    const hasViews = parsedFiles.some(f => f.filePath.includes('view') || f.filePath.includes('View') || f.filePath.includes('component'));
+    const hasControllers = parsedFiles.some(f => f.filePath.includes('controller') || f.filePath.includes('Controller'));
+    
+    if (hasModels && hasViews && hasControllers) {
+      return {
+        type: 'MVC',
+        confidence: 0.8,
+        evidence: [
+          { type: 'file-structure', evidence: 'Model layer directory structure detected', confidence: 0.9 },
+          { type: 'file-structure', evidence: 'View layer directory structure detected', confidence: 0.9 },
+          { type: 'file-structure', evidence: 'Controller layer directory structure detected', confidence: 0.9 }
+        ],
+        description: 'Separation of concerns with distinct model, view, and controller layers',
+        implications: [
+          { type: 'maintainability', impact: 'positive', description: 'Clear separation of concerns' }
+        ]
+      };
+    }
+    return null;
+  }
+
+  private detectMicroservicesPattern(parsedFiles: ParsedFile[]): ArchitecturalPattern | null {
+    const serviceFiles = parsedFiles.filter(f => f.filePath.includes('service') || f.filePath.includes('Service'));
+    const apiFiles = parsedFiles.filter(f => f.ast && f.ast.type === 'typescript-ast' && (f.ast as TypeScriptAnalysisResult).routes.length > 0);
+    
+    if (serviceFiles.length > 2 && apiFiles.length > 1) {
+      return {
+        type: 'Microservices',
+        confidence: 0.7,
+        evidence: [
+          { type: 'code-organization', evidence: `${serviceFiles.length} service modules detected`, confidence: 0.8 }
+        ],
+        description: 'Distributed architecture with independent service boundaries',
+        implications: [
+          { type: 'scalability', impact: 'positive', description: 'Independent service scaling' }
+        ]
+      };
+    }
+    return null;
+  }
+
+  private detectRepositoryPattern(parsedFiles: ParsedFile[]): ArchitecturalPattern | null {
+    const repositoryFiles = parsedFiles.filter(f => f.filePath.includes('repository') || f.filePath.includes('Repository') || f.filePath.includes('dao'));
+    
+    if (repositoryFiles.length > 0) {
+      return {
+        type: 'DomainDriven',
+        confidence: 0.9,
+        evidence: [
+          { type: 'dependency-pattern', evidence: 'Repository pattern detected', confidence: 0.9 }
+        ],
+        description: 'Data access abstraction with repository interfaces',
+        implications: [
+          { type: 'maintainability', impact: 'positive', description: 'Improved data layer testing' }
+        ]
+      };
+    }
+    return null;
+  }
+
+  private detectServiceLayerPattern(parsedFiles: ParsedFile[]): ArchitecturalPattern | null {
+    const serviceFiles = parsedFiles.filter(f => f.filePath.includes('service') || f.filePath.includes('Service'));
+    
+    if (serviceFiles.length >= 2) {
+      return {
+        type: 'Layered',
+        confidence: 0.8,
+        evidence: [
+          { type: 'code-organization', evidence: 'Service layer pattern detected', confidence: 0.8 }
+        ],
+        description: 'Business logic encapsulation in service classes',
+        implications: [
+          { type: 'maintainability', impact: 'positive', description: 'Business logic separation' }
+        ]
+      };
+    }
+    return null;
+  }
+
+  private findCriticalPaths(): CriticalPath[] {
+    const criticalPaths: CriticalPath[] = [];
+    
+    const entryPoints = Array.from(this.dependencyGraph.values())
+      .filter(node => node.dependencies.length === 0);
+    
+    const exitPoints = Array.from(this.dependencyGraph.values())
+      .filter(node => node.dependents.length === 0);
+    
+    for (const entry of entryPoints) {
+      for (const exit of exitPoints) {
+        const path = this.findShortestPath(entry.filePath, exit.filePath);
+        if (path && path.length > 2) {
+          criticalPaths.push({
+            components: path,
+            businessImpact: this.calculatePathImportance(path) > 5 ? 'Core application flow' : 'Secondary flow',
+            riskLevel: this.calculatePathComplexity(path) > 5 ? 'high' : 'medium'
+          });
+        }
+      }
+    }
+    
+    return criticalPaths.sort((a, b) => {
+      const aRisk = a.riskLevel === 'high' ? 3 : a.riskLevel === 'medium' ? 2 : 1;
+      const bRisk = b.riskLevel === 'high' ? 3 : b.riskLevel === 'medium' ? 2 : 1;
+      return bRisk - aRisk;
+    }).slice(0, 10);
+  }
+
+  private findStronglyConnectedComponents(): ComponentCluster[] {
+    const components: ComponentCluster[] = [];
+    const visited = new Set<string>();
+    
+    for (const [filePath] of this.dependencyGraph) {
+      if (!visited.has(filePath)) {
+        const component = this.findComponentFromNode(filePath, visited);
+        if (component.files.length > 1) {
+          components.push({
+            components: component.files,
+            cohesion: this.calculateComponentCohesion(component.files),
+            purpose: this.inferComponentPurpose(component.files)
+          });
+        }
+      }
+    }
+    
+    return components.sort((a, b) => b.cohesion - a.cohesion);
+  }
+
+  private mapArchitecturalLayers(parsedFiles: ParsedFile[]): ArchitecturalLayer[] {
+    const layers: ArchitecturalLayer[] = [];
+    
+    const layerCandidates = this.identifyLayerCandidates(parsedFiles);
+    
+    for (const [layerName, files] of layerCandidates) {
+      const dependencies = this.calculateLayerDependencies(files);
+      
+      layers.push({
+        name: layerName,
+        components: files,
+        dependencies,
+        purpose: this.identifyLayerPurpose(layerName, files)
+      });
+    }
+    
+    return layers.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  // Additional helper methods
+  private findShortestPath(_start: string, _end: string): string[] | null {
+    return null; // Simplified for now
+  }
+
+  private calculatePathImportance(path: string[]): number {
+    return path.length * 0.5;
+  }
+
+  private calculatePathComplexity(path: string[]): number {
+    return path.length;
+  }
+
+  private findComponentFromNode(startNode: string, visited: Set<string>): { files: string[] } {
+    visited.add(startNode);
+    return { files: [startNode] };
+  }
+
+  private calculateComponentCohesion(_files: string[]): number {
+    return 0.7;
+  }
+
+  private inferComponentPurpose(files: string[]): string {
+    if (files.some(f => f.includes('service'))) return 'Business logic services';
+    if (files.some(f => f.includes('controller'))) return 'API controllers';
+    if (files.some(f => f.includes('model'))) return 'Data models';
+    return 'General purpose components';
+  }
+
+  private identifyLayerCandidates(parsedFiles: ParsedFile[]): Map<string, string[]> {
+    const layers = new Map<string, string[]>();
+    
+    for (const file of parsedFiles) {
+      const path = file.filePath;
+      let layer = 'core';
+      
+      if (path.includes('controller')) layer = 'controllers';
+      else if (path.includes('service')) layer = 'services';
+      else if (path.includes('model') || path.includes('entity')) layer = 'models';
+      else if (path.includes('view') || path.includes('component')) layer = 'views';
+      else if (path.includes('repository') || path.includes('dao')) layer = 'data';
+      else if (path.includes('util') || path.includes('helper')) layer = 'utilities';
+      
+      const existing = layers.get(layer) || [];
+      existing.push(path);
+      layers.set(layer, existing);
+    }
+    
+    return layers;
+  }
+
+  private calculateLayerDependencies(_files: string[]): string[] {
+    return [];
+  }
+
+  private identifyLayerPurpose(layerName: string, _files: string[]): string {
+    switch (layerName) {
+      case 'controllers': return 'Handle HTTP requests and responses';
+      case 'services': return 'Implement business logic';
+      case 'models': return 'Define data structures and validation';
+      case 'views': return 'Render user interface components';
+      case 'data': return 'Manage data persistence and access';
+      case 'utilities': return 'Provide helper functions and utilities';
+      default: return 'Core application functionality';
+    }
   }
 }
