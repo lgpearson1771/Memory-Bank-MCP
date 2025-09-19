@@ -7,6 +7,34 @@
 import * as path from 'path';
 
 /**
+ * Check if we're running in development or test environment
+ */
+function isDevelopmentOrTest(): boolean {
+  // Check for test environment
+  if (process.env.NODE_ENV === 'test' || 
+      process.env.JEST_WORKER_ID !== undefined ||
+      typeof jest !== 'undefined') {
+    return true;
+  }
+  
+  // Check for development environment
+  if (process.env.NODE_ENV === 'development') {
+    return true;
+  }
+  
+  // Check if running with common development commands
+  const command = process.argv.join(' ');
+  if (command.includes('jest') || 
+      command.includes('test') || 
+      command.includes('dev') ||
+      command.includes('--watch')) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
  * Path validation and sanitization utilities
  */
 export interface PathValidator {
@@ -102,7 +130,7 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
     /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
     /<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi
   ],
-  logSecurityEvents: true,
+  logSecurityEvents: isDevelopmentOrTest(),
   throwOnViolation: false
 };
 
@@ -223,7 +251,7 @@ export class ContentSanitizerImpl implements ContentSanitizer {
           for (const pattern of this.config.dangerousPatterns) {
             if (pattern.test(line)) {
               if (this.config.logSecurityEvents) {
-                console.warn(`Security: Dangerous command filtered: ${line.trim()}`);
+                console.warn(`Security: Potentially dangerous command filtered: ${line.trim()}`);
               }
               // Remove the line entirely instead of commenting it
               return false;
@@ -276,7 +304,7 @@ export class ContentSanitizerImpl implements ContentSanitizer {
           
           if (hasViolation) {
             if (this.config.logSecurityEvents) {
-              console.warn(`Security: Dangerous script filtered: ${key} = ${value}`);
+              console.warn(`Security: Potentially dangerous script filtered: ${key} = ${value}`);
             }
             filteredScripts[key] = '# SECURITY: Script filtered for safety';
           } else {

@@ -42,12 +42,33 @@ export async function setupCopilotInstructions(
   
   let finalContent: string;
   
-  if (!fileExists || existingContent.trim() === '') {
-    // No existing file or empty file - create complete template
+  if (!fileExists) {
+    // No existing file - create complete template only if no file exists at all
+    finalContent = await generateDynamicCopilotTemplate(memoryBankStructure, options);
+  } else if (existingContent.trim() === '') {
+    // File exists but is empty - create complete template
     finalContent = await generateDynamicCopilotTemplate(memoryBankStructure, options);
   } else {
-    // File exists with content - preserve it and append/update Memory Bank section
-    finalContent = await mergeMemoryBankSection(existingContent, memoryBankSection);
+    // File exists with content - ALWAYS preserve it and only add/update Memory Bank section
+    // Check if we have a Memory Bank section already
+    const hasMemoryBankSection = existingContent.includes('# Memory Bank');
+    
+    if (hasMemoryBankSection) {
+      // Check if this is a well-formed Memory Bank section (has generation marker)
+      const hasGenerationMarker = existingContent.includes('*Generated:') && existingContent.includes('---');
+      
+      if (hasGenerationMarker) {
+        // Well-formed section - safe to replace
+        finalContent = await mergeMemoryBankSection(existingContent, memoryBankSection);
+      } else {
+        // Malformed section - be conservative and append instead
+        finalContent = existingContent + '\n\n' + memoryBankSection;
+      }
+    } else {
+      // Append Memory Bank section to existing content (preserve everything)
+      const separator = existingContent.trim() ? '\n\n' : '';
+      finalContent = existingContent + separator + memoryBankSection;
+    }
   }
   
   // Write the final content
@@ -220,30 +241,47 @@ REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is
 async function mergeMemoryBankSection(existingContent: string, memoryBankSection: string): Promise<string> {
   // Define memory bank section markers
   const MEMORY_BANK_START_MARKER = '# Memory Bank';
-  const MEMORY_BANK_END_MARKER = '---\n*Generated:';
   
   // Check if there's already a Memory Bank section
   const startIndex = existingContent.indexOf(MEMORY_BANK_START_MARKER);
   
   if (startIndex !== -1) {
-    // Find the end of the existing Memory Bank section
-    const searchStart = startIndex + MEMORY_BANK_START_MARKER.length;
-    const endMarkerIndex = existingContent.indexOf(MEMORY_BANK_END_MARKER, searchStart);
+    // There's already a Memory Bank section - we need to replace it
+    // Look for the next major section (starting with # but not ## or ###) or end of file
+    let endIndex = existingContent.length;
     
-    if (endMarkerIndex !== -1) {
-      // Find the end of the timestamp line
-      const lineEndIndex = existingContent.indexOf('\n', endMarkerIndex + MEMORY_BANK_END_MARKER.length);
-      const endIndex = lineEndIndex !== -1 ? lineEndIndex + 1 : existingContent.length;
-      
-      // Replace the existing Memory Bank section
-      const beforeMemoryBank = existingContent.substring(0, startIndex);
-      const afterMemoryBank = existingContent.substring(endIndex);
-      
-      return beforeMemoryBank + memoryBankSection + '\n\n' + afterMemoryBank;
+    // Find the next section that starts with # at the beginning of a line (but not ## or ###)
+    const remainingContent = existingContent.substring(startIndex + MEMORY_BANK_START_MARKER.length);
+    const nextSectionMatch = remainingContent.match(/\n# (?!#)/); // Matches \n# but not \n## or \n###
+    
+    if (nextSectionMatch && nextSectionMatch.index !== undefined) {
+      endIndex = startIndex + MEMORY_BANK_START_MARKER.length + nextSectionMatch.index;
+    } else {
+      // No clear next section found, but check for generation markers as a fallback
+      const generationMarkerMatch = remainingContent.match(/\n---\s*\n\*Generated:/);
+      if (generationMarkerMatch && generationMarkerMatch.index !== undefined) {
+        // Find the end of that line
+        const markerStart = startIndex + MEMORY_BANK_START_MARKER.length + generationMarkerMatch.index;
+        const nextLineMatch = existingContent.substring(markerStart).match(/\n/);
+        if (nextLineMatch && nextLineMatch.index !== undefined) {
+          endIndex = markerStart + nextLineMatch.index + 1;
+        }
+      }
     }
+    
+    // Replace the existing Memory Bank section
+    const beforeMemoryBank = existingContent.substring(0, startIndex).trimEnd();
+    const afterMemoryBank = existingContent.substring(endIndex);
+    
+    // Add proper spacing
+    const spacing = beforeMemoryBank ? '\n\n' : '';
+    const afterSpacing = afterMemoryBank.trim() ? '\n\n' : '';
+    
+    return beforeMemoryBank + spacing + memoryBankSection + afterSpacing + afterMemoryBank;
   }
   
-  // No existing Memory Bank section found - append at the end
+  // No existing Memory Bank section found - this shouldn't happen with our new logic
+  // but as a fallback, append at the end
   const separator = existingContent.trim() ? '\n\n' : '';
   return existingContent + separator + memoryBankSection;
 }

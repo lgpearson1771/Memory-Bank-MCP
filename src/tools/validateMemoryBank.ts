@@ -3,6 +3,7 @@
  * Validate existing memory bank structure, completeness, and optionally sync with Copilot instructions
  */
 
+import { join } from 'path';
 import { validateMemoryBank } from '../core/validation.js';
 
 export const validateMemoryBankTool = {
@@ -36,7 +37,10 @@ export async function handleValidateMemoryBank(args: any) {
   const interactiveMode = args.interactiveMode || false;
   
   try {
-    const validation = await validateMemoryBank(projectRootPath, {
+    // Construct the correct memory bank path
+    const memoryBankPath = join(projectRootPath, '.github', 'memory-bank');
+    
+    const validation = await validateMemoryBank(memoryBankPath, {
       syncValidation,
       interactiveMode,
       projectRoot: projectRootPath
