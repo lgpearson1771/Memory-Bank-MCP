@@ -6,9 +6,9 @@ The Memory Bank Generator MCP Server provides 6 tools for creating and managing 
 
 ## 🔧 Key Features
 
-- **Semantic Organization**: Smart categorization of files into purpose-based folders
+- **Automated Generation**: Intelligent analysis and content creation
+- **Semantic Organization**: Smart categorization of files into purpose-based folders  
 - **GitHub Copilot Integration**: Instructions automatically adapt to memory bank structure
-- **Interactive Workflow**: User-guided customization for project-specific needs
 - **Comprehensive Validation**: Sync checking between memory bank and Copilot instructions
 - **Flexible Structure**: Choice between semantic organization and flat structure
 

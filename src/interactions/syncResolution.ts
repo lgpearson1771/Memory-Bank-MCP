@@ -123,7 +123,7 @@ export async function performInteractiveSyncResolution(
   }
   
   // Step 4: Validate final state
-  const finalValidation = await validateCopilotSync(memoryBankDir, projectRoot, false);
+  const finalValidation = await validateCopilotSync(memoryBankDir, projectRoot);
   
   conversationLog.push({
     step: stepNumber++,

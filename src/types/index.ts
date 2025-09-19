@@ -4,7 +4,6 @@
 
 // Re-export from individual type files
 export * from './config.js';
-export * from './conversational.js';
 export * from './sync.js';
 export * from './mcpTypes.js';
 export * from './analysisTypes.js';

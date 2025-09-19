@@ -18,11 +18,10 @@ import { cleanupPreviousMemoryBankFiles } from '../utils/fileUtils.js';
 /**
  * LLM-Powered Memory Bank Generator
  * 
- * This is the NEW implementation that replaces template-based generation
- * with AI-powered content creation using a two-phase approach.
+ * This is the current implementation that replaces template-based generation
+ * with AI-powered content creation using automated analysis and generation.
  * 
- * Phase 1: Analyze project and generate prompts for LLM
- * Phase 2: Process LLM responses into high-quality memory bank
+ * Process: Analyze project → Generate LLM prompts → Create memory bank content
  */
 export class MemoryBankGenerator {
     private llmEngine: LLMIntegrationEngine;

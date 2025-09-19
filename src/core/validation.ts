@@ -32,7 +32,7 @@ export interface CopilotSyncValidation {
   orphanedReferences: string[];           // Copilot references not in memory bank
   isInSync: boolean;                      // True if all files properly referenced
   lastValidated: string;                  // ISO timestamp of last validation
-  conflictDetails?: SyncConflictDetails;  // Detailed conflict information for interactive resolution
+  conflictDetails?: SyncConflictDetails;  // Detailed conflict information for automated resolution
 }
 
 export interface SyncConflictDetails {
@@ -65,7 +65,7 @@ export interface ConflictAction {
  */
 export async function validateMemoryBank(
   memoryBankDir: string,
-  options?: { syncValidation?: boolean; projectRoot?: string; interactiveMode?: boolean }
+  options?: { syncValidation?: boolean; projectRoot?: string }
 ): Promise<ValidationResult> {
   const requiredFiles = [
     'projectbrief.md',
@@ -135,8 +135,7 @@ export async function validateMemoryBank(
     if (options?.syncValidation && options?.projectRoot) {
       result.copilotSync = await validateCopilotSync(
         memoryBankDir, 
-        options.projectRoot, 
-        options.interactiveMode || false
+        options.projectRoot
       );
     }
     
@@ -153,8 +152,7 @@ export async function validateMemoryBank(
  */
 export async function validateCopilotSync(
   memoryBankDir: string,
-  projectRoot: string,
-  interactiveMode: boolean = false
+  projectRoot: string
 ): Promise<CopilotSyncValidation> {
   const copilotPath = path.join(projectRoot, '.github', 'copilot-instructions.md');
   
@@ -199,18 +197,8 @@ export async function validateCopilotSync(
   
   const isInSync = unreferencedFiles.length === 0 && orphanedReferences.length === 0;
   
-  // Generate conflict details if there are sync issues and interactive mode is enabled
-  let conflictDetails: SyncConflictDetails | undefined;
-  if (!isInSync && interactiveMode) {
-    conflictDetails = await generateConflictDetails(
-      memoryBankFiles,
-      copilotReferences,
-      unreferencedFiles,
-      orphanedReferences,
-      memoryBankDir,
-      copilotPath
-    );
-  }
+  // Conflict details are not generated in the current automated implementation
+  const conflictDetails: SyncConflictDetails | undefined = undefined;
   
   const result: CopilotSyncValidation = {
     memoryBankFiles,
@@ -255,7 +243,7 @@ export async function discoverAllMemoryBankFiles(memoryBankDir: string): Promise
 }
 
 /**
- * Generate detailed conflict analysis for interactive resolution
+ * Generate detailed conflict analysis for automated resolution
  */
 export async function generateConflictDetails(
   _memoryBankFiles: string[],
@@ -378,6 +366,29 @@ export async function generateConflictDetails(
  * Extract file references from content
  */
 export function extractFileReferences(content: string): string[] {
+  // Only extract references from our Memory Bank template section
+  const memoryBankTemplateSignature = "REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.";
+  
+  // Find our Memory Bank template section
+  const signatureIndex = content.indexOf(memoryBankTemplateSignature);
+  
+  if (signatureIndex === -1) {
+    // No Memory Bank template found, return empty array
+    return [];
+  }
+  
+  // Find the start of our Memory Bank section (work backwards from signature)
+  const beforeSignature = content.substring(0, signatureIndex);
+  const memoryBankStartMatch = beforeSignature.lastIndexOf('# Memory Bank\n\nI am GitHub Copilot');
+  
+  if (memoryBankStartMatch === -1) {
+    // Can't find the start of our template, return empty array
+    return [];
+  }
+  
+  // Extract only the Memory Bank template section
+  const memoryBankSection = content.substring(memoryBankStartMatch, signatureIndex + memoryBankTemplateSignature.length);
+  
   const references: string[] = [];
   
   // Match patterns like `filename.md`, "filename.md", 'filename.md'
@@ -390,7 +401,7 @@ export function extractFileReferences(content: string): string[] {
   
   for (const pattern of patterns) {
     let match;
-    while ((match = pattern.exec(content)) !== null) {
+    while ((match = pattern.exec(memoryBankSection)) !== null) {
       references.push(match[1]);
     }
   }

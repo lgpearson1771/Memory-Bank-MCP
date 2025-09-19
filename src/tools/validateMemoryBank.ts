@@ -20,11 +20,6 @@ export const validateMemoryBankTool = {
         type: 'boolean',
         description: 'Enable comprehensive sync validation with Copilot instructions (default: false)',
         default: false,
-      },
-      interactiveMode: {
-        type: 'boolean',
-        description: 'Enable interactive conflict resolution for sync issues (default: false)',
-        default: false,
       }
     },
     required: ['projectRootPath']
@@ -34,7 +29,6 @@ export const validateMemoryBankTool = {
 export async function handleValidateMemoryBank(args: any) {
   const projectRootPath = args.projectRootPath;
   const syncValidation = args.syncValidation || false;
-  const interactiveMode = args.interactiveMode || false;
   
   try {
     // Construct the correct memory bank path
@@ -42,7 +36,6 @@ export async function handleValidateMemoryBank(args: any) {
     
     const validation = await validateMemoryBank(memoryBankPath, {
       syncValidation,
-      interactiveMode,
       projectRoot: projectRootPath
     });
     

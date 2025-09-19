@@ -1,6 +1,5 @@
 # Memory Bank Generator MCP Server
 
-
 > 🧠 Automated Memory Bank Generation with Semantic Organization for AI-Assisted Development
 >
 > *Allows AI assistants to remember your project across sessions*
@@ -15,10 +14,10 @@ An MCP server that creates comprehensive memory banks for AI assistants like Git
 
 ## 🎯 What It Does
 
-- **Analyzes your project**: Reads package.json, scans files, detects frameworks
+- **Analyzes your project**: Scans files, detects patterns, understands structure
 - **Creates memory banks**: Generates 6 core documentation files in `.github/memory-bank/`
-- **Sets up Copilot**: Automatically configures GitHub Copilot to use the memory bank
-- **Smart organization**: Optional semantic folders for complex projects
+- **Sets up AI integration**: Automatically configures AI assistants to use the memory bank
+- **Automated generation**: Uses advanced analysis for high-quality, project-specific content
 
 ## 🚀 Quick Start
 
@@ -33,17 +32,12 @@ npm run build
 
 ## 📚 Documentation
 
-- **[Complete Documentation](docs/README.md)** - Full documentation index
-- **[Setup Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Detailed installation and configuration
-- **[Product Requirements](docs/prds/Memory-Bank-Generator-PRD.md)** - Feature specifications
-- **[Testing Strategy](docs/prds/Testing-PRD.md)** - Testing and security implementation
+**📁 [Complete Documentation](docs/)** - All guides, setup instructions, and technical details
 
-## 🧪 Testing & Quality
-
-**Current Status**: ✅ Security implementation complete (11/11 security tests passing)
-- Content sanitization and input validation working
-- Professional documentation generation
-- See [Testing PRD](docs/prds/Testing-PRD.md) for detailed status
+**Quick Links:**
+- **[Setup Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Installation for Claude Desktop and VS Code
+- **[Configuration Examples](docs/examples/)** - Ready-to-use config files
+- **[Architecture & Testing](docs/)** - Technical documentation and testing strategy
 
 1. **Add to VS Code's mcp.json:**
    ```json
@@ -96,23 +90,14 @@ You should see: ✅ All 6 MCP tools configured successfully!
 
 ## 🛠️ Available Tools
 
-### `generate_memory_bank`
-Creates memory banks for your project with real project data
+**6 MCP Tools for Memory Bank Management:**
 
-### `analyze_project_structure`  
-Analyzes your project before generating memory banks
-
-### `update_memory_bank`
-Updates existing memory banks when your project changes
-
-### `validate_memory_bank`
-Checks memory bank quality and syncs with Copilot
-
-### `resolve_sync_conflicts`
-Fixes conflicts between memory bank and Copilot instructions
-
-### `setup_copilot_instructions`
-Sets up GitHub Copilot to use your memory bank
+- `generate_memory_bank` - Creates high-quality memory banks using AI assistance
+- `analyze_project_structure` - Analyzes your project structure and patterns
+- `update_memory_bank` - Updates existing memory banks with new changes
+- `validate_memory_bank` - Validates memory bank quality and AI integration
+- `resolve_sync_conflicts` - Resolves conflicts between memory bank and AI setup
+- `setup_copilot_instructions` - Sets up AI assistants to use your memory bank
 
 ## 📁 What Gets Created
 
@@ -132,37 +117,30 @@ Memory banks are created in `.github/memory-bank/` with these files:
 
 **Optional**: You can request additional files organized in semantic folders like `features/`, `api/`, `deployment/`, etc.
 
-## 🎯 Simple Usage
+## 🎯 How It Works
 
-### Basic Memory Bank
-```
-Ask Copilot: "Generate a memory bank for my project at C:\MyProject"
-Result: 6 core files created with your real project data
-```
+### Automated Analysis & Generation
 
-### With Additional Documentation  
+**Single Command Workflow**
 ```
-Ask Copilot: "Generate a memory bank with API documentation"
-Result: Core files + api/ folder with API docs
+You: "Generate a memory bank for my project at C:\MyProject"
+MCP: Analyzes project → Generates content → Creates memory bank files
 ```
 
-### Example Generated Content
-```markdown
-### Dependencies
-- express@^4.18.0
-- react@^18.2.0
+**Intelligent Processing**
+- Deep project analysis (dependencies, structure, patterns)
+- AI-powered content generation using built-in prompts
+- Professional formatting and file organization
+- Automatic AI assistant integration
 
-### Scripts  
-- npm start: node server.js
-- npm test: jest
-```
+**Result**: 6 high-quality documentation files with actual project details, not generic templates.
 
 ## 💡 Why Use This?
 
-- **Persistent Memory**: Copilot remembers your project between sessions
-- **Real Data**: Uses actual project info, not generic templates  
-- **Zero Setup**: Just point and generate
-- **Smart Organization**: Files organized by purpose when needed
+- **AI-Quality Content**: Leverages AI intelligence for professional, project-specific documentation
+- **Persistent Memory**: AI assistants remember your project between sessions
+- **Automated Excellence**: Deep analysis + intelligent generation = superior results
+- **Easy Integration**: Works with Claude Desktop, VS Code, and other MCP-compatible tools
 
 ## 🤝 Contributing
 

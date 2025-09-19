@@ -10,7 +10,7 @@ export class LLMIntegrationEngine {
     
     /**
      * Generate prompts for LLM processing based on project analysis
-     * This is Phase 1 of the two-phase generation process
+     * This creates structured prompts for automated content generation
      */
     async generatePrompts(
         analysis: ProjectAnalysis,

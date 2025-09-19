@@ -34,8 +34,7 @@ export async function handleResolveSyncConflicts(args: any) {
     // First, validate to get conflict details
     const validation = await validateMemoryBank(memoryBankDir, { 
       syncValidation: true, 
-      projectRoot: projectRootPath,
-      interactiveMode: true
+      projectRoot: projectRootPath
     });
     
     if (validation.copilotSync?.isInSync) {
