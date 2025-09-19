@@ -312,6 +312,16 @@ describe('Memory Bank Structure Transition Integration', () => {
     };
     
     await generateMemoryBankFiles(memoryBankDir, analysis, standardOptions);
+    
+    // Delete existing copilot instructions so they get regenerated with new structure
+    // (Our new logic preserves existing copilot instructions, so we need to remove them for this test)
+    const copilotPath = path.join(projectRoot, '.github', 'copilot-instructions.md');
+    try {
+      await fs.unlink(copilotPath);
+    } catch {
+      // File might not exist, which is fine
+    }
+    
     await setupCopilotInstructions(projectRoot);
     
     // Verify ONLY core files remain

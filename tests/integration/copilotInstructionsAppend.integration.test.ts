@@ -148,27 +148,26 @@ Remember to follow our coding standards!
       );
     });
 
-    it('should update existing Memory Bank section without affecting other content', async () => {
+    it('should preserve existing Memory Bank section without making changes when signature is present', async () => {
       const existingContent = `# Project Instructions
 
 Custom project setup and guidelines.
 
 # Memory Bank
 
-Old memory bank content that should be replaced.
+Old memory bank content that should be preserved.
 
 ## Old Structure
 This is outdated information.
 
----
-*Generated: 2023-01-01T00:00:00.000Z*
+REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
 
 # Additional Instructions
 
 More custom content that should be preserved.
 `;
 
-      // Write existing copilot instructions with old Memory Bank section
+      // Write existing copilot instructions with our template signature
       await fs.writeFile(copilotInstructionsPath, existingContent);
 
       // Create memory bank
@@ -181,38 +180,88 @@ More custom content that should be preserved.
         additionalFiles: ['api', 'testing']
       });
 
-      // Setup copilot instructions (should update Memory Bank section)
+      // Setup copilot instructions (should preserve everything - no changes)
       await setupCopilotInstructions(testProjectRoot, { syncValidation: true });
 
       const finalContent = await fs.readFile(copilotInstructionsPath, 'utf8');
 
+      // Verify ALL content is exactly preserved (no changes made)
+      expect(finalContent).toBe(existingContent);
+      
       // Verify custom content before and after is preserved
       expect(finalContent).toContain('# Project Instructions');
       expect(finalContent).toContain('Custom project setup and guidelines.');
       expect(finalContent).toContain('# Additional Instructions');
       expect(finalContent).toContain('More custom content that should be preserved.');
 
-      // Verify old Memory Bank content was replaced
-      expect(finalContent).not.toContain('Old memory bank content');
-      expect(finalContent).not.toContain('## Old Structure');
-      expect(finalContent).not.toContain('This is outdated information.');
-      expect(finalContent).not.toContain('2023-01-01T00:00:00.000Z');
+      // Verify old Memory Bank content was PRESERVED (not replaced)
+      expect(finalContent).toContain('Old memory bank content that should be preserved.');
+      expect(finalContent).toContain('## Old Structure');
+      expect(finalContent).toContain('This is outdated information.');
+      expect(finalContent).toContain('REMEMBER: After every memory reset, I begin completely fresh');
+    });
 
-      // Verify new Memory Bank content is present
-      expect(finalContent).toContain('# Memory Bank');
+    it('should append Memory Bank template when signature is not present', async () => {
+      const existingContent = `# Project Instructions
+
+Custom project setup and guidelines.
+
+# My Custom Memory Bank
+
+Old memory bank content WITHOUT our signature.
+
+## Old Structure
+This is outdated information.
+
+# Additional Instructions
+
+More custom content that should be preserved.
+`;
+
+      // Write existing copilot instructions WITHOUT our template signature
+      await fs.writeFile(copilotInstructionsPath, existingContent);
+
+      // Create memory bank
+      const analysis = await analyzeProject(testProjectRoot);
+      await ensureMemoryBankDirectory(testProjectRoot);
+      await generateMemoryBankFiles(memoryBankDir, analysis, {
+        structureType: 'enhanced',
+        focusAreas: ['api', 'testing'],
+        detailLevel: 'detailed',
+        additionalFiles: ['api', 'testing']
+      });
+
+      // Setup copilot instructions (should append our template)
+      await setupCopilotInstructions(testProjectRoot, { syncValidation: true });
+
+      const finalContent = await fs.readFile(copilotInstructionsPath, 'utf8');
+
+      // Verify content was appended (not replaced)
+      expect(finalContent.length).toBeGreaterThan(existingContent.length);
+      
+      // Verify ALL original content is preserved
+      expect(finalContent).toContain('# Project Instructions');
+      expect(finalContent).toContain('Custom project setup and guidelines.');
+      expect(finalContent).toContain('# My Custom Memory Bank');
+      expect(finalContent).toContain('Old memory bank content WITHOUT our signature.');
+      expect(finalContent).toContain('# Additional Instructions');
+      expect(finalContent).toContain('More custom content that should be preserved.');
+
+      // Verify our template was added
       expect(finalContent).toContain('## Memory Bank Structure');
       expect(finalContent).toContain('## Core Workflows');
       expect(finalContent).toContain('projectbrief.md');
-      expect(finalContent).toContain('Sync Validation');
-      expect(finalContent).toMatch(/Generated: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      expect(finalContent).toContain('REMEMBER: After every memory reset, I begin completely fresh');
 
-      // Verify content order is maintained
+      // Verify content order is maintained for original content
       const projectInstructionsIndex = finalContent.indexOf('# Project Instructions');
-      const memoryBankIndex = finalContent.indexOf('# Memory Bank');
+      const firstMemoryBankIndex = finalContent.indexOf('# My Custom Memory Bank');
       const additionalInstructionsIndex = finalContent.indexOf('# Additional Instructions');
+      const ourMemoryBankIndex = finalContent.lastIndexOf('# Memory Bank'); // Our appended template
 
-      expect(projectInstructionsIndex).toBeLessThan(memoryBankIndex);
-      expect(memoryBankIndex).toBeLessThan(additionalInstructionsIndex);
+      expect(projectInstructionsIndex).toBeLessThan(firstMemoryBankIndex);
+      expect(firstMemoryBankIndex).toBeLessThan(additionalInstructionsIndex);
+      expect(additionalInstructionsIndex).toBeLessThan(ourMemoryBankIndex);
     });
   });
 
@@ -307,7 +356,7 @@ My existing project instructions.
   });
 
   describe('Edge Cases', () => {
-    it('should handle multiple existing Memory Bank sections gracefully', async () => {
+    it('should handle multiple existing Memory Bank sections gracefully by appending template', async () => {
       const existingContent = `# Instructions
 
 First part.
@@ -351,7 +400,10 @@ End content.
 
       const finalContent = await fs.readFile(copilotInstructionsPath, 'utf8');
 
-      // Should replace the first Memory Bank section and leave others
+      // Should preserve ALL original content AND append our template (because signature not present)
+      expect(finalContent.length).toBeGreaterThan(existingContent.length);
+      
+      // Verify all original sections are preserved
       expect(finalContent).toContain('# Instructions');
       expect(finalContent).toContain('First part.');
       expect(finalContent).toContain('# More Instructions');
@@ -359,16 +411,18 @@ End content.
       expect(finalContent).toContain('# Final Instructions');
       expect(finalContent).toContain('End content.');
 
-      // Should have current Memory Bank content
+      // Should preserve old content AND add our template
+      expect(finalContent).toContain('First memory bank section.');
+      expect(finalContent).toContain('2023-01-01T00:00:00.000Z');
+      expect(finalContent).toContain('Second memory bank section (should not happen but handle gracefully).');
+      expect(finalContent).toContain('2023-01-02T00:00:00.000Z');
+      
+      // Should also contain our new template
       expect(finalContent).toContain('## Memory Bank Structure');
-      expect(finalContent).toContain('## Core Workflows');
-
-      // Should not have old content
-      expect(finalContent).not.toContain('First memory bank section.');
-      expect(finalContent).not.toContain('2023-01-01T00:00:00.000Z');
+      expect(finalContent).toContain('REMEMBER: After every memory reset, I begin completely fresh');
     });
 
-    it('should handle malformed Memory Bank section markers', async () => {
+    it('should handle malformed Memory Bank section markers by appending template', async () => {
       const existingContent = `# Instructions
 
 Content before.
@@ -396,14 +450,18 @@ Some more content that should be preserved.
 
       const finalContent = await fs.readFile(copilotInstructionsPath, 'utf8');
 
-      // Should preserve existing content and append new Memory Bank section
+      // Should preserve ALL existing content AND append our template (because signature not present)
+      expect(finalContent.length).toBeGreaterThan(existingContent.length);
+      
+      // Verify existing content is preserved
       expect(finalContent).toContain('# Instructions');
       expect(finalContent).toContain('Content before.');
+      expect(finalContent).toContain('Incomplete memory bank section without proper end marker...');
       expect(finalContent).toContain('Some more content that should be preserved.');
       
-      // Should contain proper Memory Bank section
+      // Should also contain our new template
       expect(finalContent).toContain('## Memory Bank Structure');
-      expect(finalContent).toContain('## Core Workflows');
+      expect(finalContent).toContain('REMEMBER: After every memory reset, I begin completely fresh');
     });
   });
 });

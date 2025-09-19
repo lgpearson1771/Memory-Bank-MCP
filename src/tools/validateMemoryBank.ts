@@ -61,9 +61,15 @@ export async function handleValidateMemoryBank(args: any) {
             },
             structureCompliance: validation.structureCompliance,
             quality: validation.quality,
-            message: validation.isValid ? 
-              '✅ Memory bank is valid and complete' : 
-              '⚠️ Memory bank has validation issues that need attention'
+            message: (() => {
+              if (!validation.isValid) {
+                return '⚠️ Memory bank has validation issues that need attention';
+              }
+              if (syncValidation && validation.copilotSync?.isInSync === false) {
+                return '⚠️ Memory bank is valid but not in sync with copilot-instructions.md';
+              }
+              return '✅ Memory bank is valid and complete';
+            })()
           }, null, 2),
         },
       ],
