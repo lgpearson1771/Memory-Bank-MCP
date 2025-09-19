@@ -20,7 +20,25 @@ export const mockReactProjectAnalysis: ProjectAnalysis = {
     directories: ['src', 'public', 'src/components', 'src/utils'],
     complexity: 'Medium',
     estimatedFiles: 15,
-    keyPatterns: ['React Components', 'TypeScript', 'CSS Modules']
+    keyPatterns: ['React Components', 'TypeScript', 'CSS Modules'],
+    organizationPatterns: [{
+      type: 'Feature-Based',
+      confidence: 0.9,
+      indicators: ['src/components directory structure', 'React framework'],
+      description: 'Component-based React application organization'
+    }],
+    architecturalHints: [{
+      pattern: 'SPA Architecture',
+      confidence: 0.8,
+      evidence: ['React framework', 'Component structure'],
+      implications: ['Single Page Application', 'Client-side routing']
+    }],
+    enterprisePatterns: [{
+      type: 'Enterprise-Library',
+      detected: true,
+      indicators: ['React framework', 'TypeScript usage'],
+      description: 'Frontend application using enterprise-grade technologies'
+    }]
   },
   dependencies: {
     runtime: {
@@ -47,12 +65,35 @@ export const mockReactProjectAnalysis: ProjectAnalysis = {
   architecture: {
     patterns: ['Component-Based Architecture', 'Source Directory Structure'],
     entryPoints: ['src/index.tsx'],
-    configFiles: ['package.json', 'tsconfig.json']
+    configFiles: ['package.json', 'tsconfig.json'],
+    systemType: 'Library',
+    serviceArchitecture: {
+      hasControllers: false,
+      hasServices: false,
+      hasRepositories: false,
+      hasMiddleware: false,
+      integrationPoints: ['External APIs via Axios'],
+      apiPatterns: ['React Props API', 'REST API Consumption']
+    },
+    enterpriseIntegration: {
+      microsoftEcosystem: false,
+      azureIntegration: false,
+      enterpriseLibraries: ['React', 'TypeScript'],
+      monitoringFrameworks: [],
+      authenticationPatterns: []
+    }
   },
   recommendations: {
     focusAreas: ['architecture', 'components', 'testing'],
     detailLevel: 'standard',
     additionalSections: ['features', 'testing']
+  },
+  businessContext: {
+    domainType: 'Consumer',
+    problemDomain: 'Frontend User Interface',
+    businessValue: ['User Experience', 'Interface Design'],
+    userTypes: ['End Users', 'Developers'],
+    integrationContext: ['Web Application', 'Browser Environment']
   }
 };
 
@@ -73,7 +114,25 @@ export const mockNodeApiProjectAnalysis: ProjectAnalysis = {
     directories: ['src', 'dist', 'src/routes', 'src/models', 'src/middleware', 'src/config'],
     complexity: 'High',
     estimatedFiles: 25,
-    keyPatterns: ['Express.js', 'MongoDB', 'JWT Authentication']
+    keyPatterns: ['Express.js', 'MongoDB', 'JWT Authentication'],
+    organizationPatterns: [{
+      type: 'MVC',
+      confidence: 0.8,
+      indicators: ['models, routes directories', 'Express.js structure'],
+      description: 'Model-View-Controller architecture pattern'
+    }],
+    architecturalHints: [{
+      pattern: 'REST API',
+      confidence: 0.9,
+      evidence: ['Express server', 'RESTful routes'],
+      implications: ['HTTP API', 'Stateless Communication']
+    }],
+    enterprisePatterns: [{
+      type: 'Service-Oriented',
+      detected: true,
+      indicators: ['Express framework', 'API structure'],
+      description: 'Service-oriented web API architecture'
+    }]
   },
   dependencies: {
     runtime: {
@@ -101,12 +160,35 @@ export const mockNodeApiProjectAnalysis: ProjectAnalysis = {
   architecture: {
     patterns: ['Service Layer Pattern', 'Source Directory Structure', 'MVC Architecture'],
     entryPoints: ['src/server.ts'],
-    configFiles: ['package.json', 'tsconfig.json', '.env']
+    configFiles: ['package.json', 'tsconfig.json', '.env'],
+    systemType: 'Microservice',
+    serviceArchitecture: {
+      hasControllers: true,
+      hasServices: true,
+      hasRepositories: true,
+      hasMiddleware: true,
+      integrationPoints: ['Database', 'External APIs'],
+      apiPatterns: ['RESTful endpoints', 'JWT Authentication']
+    },
+    enterpriseIntegration: {
+      microsoftEcosystem: false,
+      azureIntegration: false,
+      enterpriseLibraries: ['Express.js', 'TypeScript'],
+      monitoringFrameworks: [],
+      authenticationPatterns: ['JWT', 'bcrypt']
+    }
   },
   recommendations: {
     focusAreas: ['api', 'architecture', 'security'],
     detailLevel: 'comprehensive',
     additionalSections: ['api', 'security', 'deployment']
+  },
+  businessContext: {
+    domainType: 'Enterprise',
+    problemDomain: 'Backend API Services',
+    businessValue: ['Data Processing', 'API Integration', 'Authentication'],
+    userTypes: ['Developers', 'API Consumers'],
+    integrationContext: ['Database Systems', 'External Services']
   }
 };
 
@@ -127,7 +209,25 @@ export const mockSimpleProjectAnalysis: ProjectAnalysis = {
     directories: [],
     complexity: 'Low',
     estimatedFiles: 3,
-    keyPatterns: ['JavaScript']
+    keyPatterns: ['JavaScript'],
+    organizationPatterns: [{
+      type: 'Flat',
+      confidence: 1.0,
+      indicators: ['Only index.js file', 'No directory structure'],
+      description: 'Simple flat file organization'
+    }],
+    architecturalHints: [{
+      pattern: 'Script',
+      confidence: 0.9,
+      evidence: ['Single file structure', 'No complex organization'],
+      implications: ['Simple utility', 'Standalone script']
+    }],
+    enterprisePatterns: [{
+      type: 'Enterprise-Library',
+      detected: false,
+      indicators: ['Simple single-file structure'],
+      description: 'Basic utility script'
+    }]
   },
   dependencies: {
     runtime: {},
@@ -139,11 +239,34 @@ export const mockSimpleProjectAnalysis: ProjectAnalysis = {
   architecture: {
     patterns: [],
     entryPoints: ['index.js'],
-    configFiles: ['package.json']
+    configFiles: ['package.json'],
+    systemType: 'Tool',
+    serviceArchitecture: {
+      hasControllers: false,
+      hasServices: false,
+      hasRepositories: false,
+      hasMiddleware: false,
+      integrationPoints: [],
+      apiPatterns: []
+    },
+    enterpriseIntegration: {
+      microsoftEcosystem: false,
+      azureIntegration: false,
+      enterpriseLibraries: [],
+      monitoringFrameworks: [],
+      authenticationPatterns: []
+    }
   },
   recommendations: {
     focusAreas: ['architecture'],
     detailLevel: 'brief',
     additionalSections: []
+  },
+  businessContext: {
+    domainType: 'Developer-Tool',
+    problemDomain: 'Utility Script',
+    businessValue: ['Development Assistance'],
+    userTypes: ['Developers'],
+    integrationContext: ['Command Line']
   }
 };

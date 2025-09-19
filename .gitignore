@@ -25,6 +25,12 @@ Thumbs.db
 # Demo and test projects
 demo-project/
 
+# PRDs
+docs/prds/
+
+# Copilot instructions (contains sensitive project information)
+.github/copilot-instructions.md
+
 # Temporary files (in case they get created again)
 temp/
 debug-*.js
