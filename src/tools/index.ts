@@ -4,7 +4,7 @@
  */
 
 // Tool definitions and handlers
-import { generateMemoryBankTool, handleGenerateMemoryBank } from './generateMemoryBank.js';
+import { generateMemoryBankTool } from './generateMemoryBank.js';
 import { updateMemoryBankTool, handleUpdateMemoryBank } from './updateMemoryBank.js';
 import { analyzeProjectStructureTool, handleAnalyzeProjectStructure } from './analyzeProjectStructure.js';
 import { validateMemoryBankTool, handleValidateMemoryBank } from './validateMemoryBank.js';
@@ -12,7 +12,7 @@ import { resolveSyncConflictsTool, handleResolveSyncConflicts } from './resolveS
 import { setupCopilotInstructionsTool, handleSetupCopilotInstructions } from './setupCopilotInstructions.js';
 
 // Re-export everything
-export { generateMemoryBankTool, handleGenerateMemoryBank } from './generateMemoryBank.js';
+export { generateMemoryBankTool } from './generateMemoryBank.js';
 export { updateMemoryBankTool, handleUpdateMemoryBank } from './updateMemoryBank.js';
 export { analyzeProjectStructureTool, handleAnalyzeProjectStructure } from './analyzeProjectStructure.js';
 export { validateMemoryBankTool, handleValidateMemoryBank } from './validateMemoryBank.js';
@@ -31,7 +31,7 @@ export const allTools = [
 
 // Collect all handlers for easy export
 export const toolHandlers = {
-  'generate_memory_bank': handleGenerateMemoryBank,
+  'generate_memory_bank': generateMemoryBankTool.handler,
   'update_memory_bank': handleUpdateMemoryBank,
   'analyze_project_structure': handleAnalyzeProjectStructure,
   'validate_memory_bank': handleValidateMemoryBank,
