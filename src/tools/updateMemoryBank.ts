@@ -1,31 +1,19 @@
 /**
- * Update Memory Bank Tool - Simplified Instructions
- * Provides analysis and clear instructions for AI assistant to update existing memory bank files
+ * Update Memory Bank Tool - Full Project Analysis and Update
+ * Works identically to generate_memory_bank but for existing memory bank files
  */
 
 import { analyzeProject } from '../core/projectAnalysis.js';
 
 export const updateMemoryBankTool = {
   name: 'update_memory_bank',
-  description: 'Update existing memory bank in .github/memory-bank folder with new project information',
+  description: 'Update existing memory bank files with current project information. Performs full project analysis and provides instructions for AI assistant to update all 6 memory bank files.',
   inputSchema: {
     type: 'object',
     properties: {
       projectRootPath: {
         type: 'string',
         description: 'Root folder path containing the .github/memory-bank folder',
-      },
-      updateType: {
-        type: 'string',
-        enum: ['incremental', 'full-refresh', 'specific-files'],
-        description: 'Type of update to perform',
-      },
-      specificFiles: {
-        type: 'array',
-        items: {
-          type: 'string'
-        },
-        description: 'Specific memory bank files to update (for specific-files update type)',
       }
     },
     required: ['projectRootPath']
@@ -34,11 +22,9 @@ export const updateMemoryBankTool = {
 
 export async function handleUpdateMemoryBank(args: any) {
   const projectRootPath = args.projectRootPath;
-  const updateType = args.updateType || 'incremental';
-  const specificFiles = args.specificFiles || [];
   
   try {
-    // Analyze the project to provide context for updates
+    // Perform full project analysis (identical to generate_memory_bank)
     const analysis = await analyzeProject(projectRootPath);
 
     return {
@@ -48,7 +34,7 @@ export async function handleUpdateMemoryBank(args: any) {
 
 ## Task: Update Existing Memory Bank Files
 
-Please update the memory bank files in the \`.github/memory-bank/\` directory based on current project state:
+Please update all 6 memory bank files in the \`.github/memory-bank/\` directory with current project information:
 
 **Project Analysis Summary:**
 - **Name**: ${analysis.projectName}
@@ -57,62 +43,85 @@ Please update the memory bank files in the \`.github/memory-bank/\` directory ba
 - **Files**: ${analysis.structure.estimatedFiles} files
 - **Complexity**: ${analysis.structure.complexity}
 - **Location**: \`${projectRootPath}\`
-- **Update Type**: ${updateType}
-
-## Update Instructions:
-
-### ${updateType === 'full-refresh' ? 'Full Refresh' : updateType === 'specific-files' ? 'Specific Files' : 'Incremental Update'}
-
-${updateType === 'full-refresh' ? `
-**Task**: Completely regenerate all 6 memory bank files with current project state.
-
-1. **Read current project files** to understand latest changes
-2. **Update all files**: projectbrief.md, productContext.md, techContext.md, systemPatterns.md, activeContext.md, progress.md
-3. **Focus on**: Recent changes, new features, updated architecture
-` : updateType === 'specific-files' ? `
-**Task**: Update only these specific files: ${specificFiles.join(', ')}
-
-1. **Read current project files** to understand latest changes
-2. **Update only**: ${specificFiles.join(', ')}
-3. **Preserve**: Content in other files unchanged
-` : `
-**Task**: Update commonly changing files with recent project activity.
-
-1. **Read current project files** to understand latest changes
-2. **Update these files**: activeContext.md, progress.md, systemPatterns.md
-3. **Focus on**: Recent development activity, current work, new patterns
-`}
 
 ## Files to Update:
 
-### Files that commonly need updates:
-- **activeContext.md**: Current work focus and recent changes
-- **progress.md**: Development status and next steps
-- **systemPatterns.md**: New patterns and architectural decisions
+### 1. \`projectbrief.md\`
+**Purpose**: Foundation document that shapes all other files
+**Content**: 
+- Project's core purpose and business value (be specific to THIS project)
+- Main features and capabilities (reference actual implementations)
+- Architecture overview with key design decisions
+- Technology rationale and development approach
+- **Requirements**: Reference actual files, functions, and implementations from the codebase
 
-### Files that rarely change:
-- **projectbrief.md**: Core project purpose (update if major changes)
-- **productContext.md**: Business context (update if requirements changed)
-- **techContext.md**: Technology stack (update if dependencies changed)
+### 2. \`productContext.md\`
+**Purpose**: Why this project exists and its business value
+**Content**:
+- Specific business problems this system solves
+- Primary users and stakeholders
+- Business processes it enables or improves
+- Key business benefits and competitive advantages
+- **Requirements**: Focus on business impact and stakeholder value
 
-## Quality Standards:
-- **Maintain consistency** with existing content style
-- **Focus on changes** since last update
-- **Be project-specific** with real examples from current codebase
-- **Professional tone** suitable for enterprise documentation
+### 3. \`techContext.md\`
+**Purpose**: Technologies used and technical implementation
+**Content**:
+- Development setup and technical constraints
+- Dependencies and tool usage patterns
+- Build & deployment processes
+- Integration points and external systems
+- **Requirements**: Include specific configuration details and technical decisions
+
+### 4. \`systemPatterns.md\`
+**Purpose**: System architecture and design patterns
+**Content**:
+- Key technical decisions and design patterns in use
+- Component relationships and critical implementation paths
+- Code organization and architectural patterns
+- Development practices and conventions
+- **Requirements**: Reference specific files and code examples
+
+### 5. \`activeContext.md\`
+**Purpose**: Current work focus and development state
+**Content**:
+- Current work focus and recent changes
+- Next steps and active decisions
+- Important patterns and preferences
+- Learnings and project insights
+- **Requirements**: Base on observable evidence from codebase
+
+### 6. \`progress.md\`
+**Purpose**: Project status and development tracking
+**Content**:
+- What works and what's left to build
+- Current status and known issues
+- Evolution of project decisions
+- Development milestones and future roadmap
+- **Requirements**: Focus on current state and next priorities
 
 ## Instructions:
 
-1. **Read the current memory bank files** to understand existing content
-2. **Read recent project changes** to identify what needs updating
-3. **Update the specified files** with current, accurate information
-4. **Maintain file quality** and professional tone
+1. **Read the existing memory bank files** to understand current content
+2. **Read the project files** to understand the codebase structure and implementation
+3. **Update each file** with current, accurate project information
+4. **Be project-specific**: Reference actual files, functions, and technical details
+5. **Replace placeholder content**: Update any sections with "TODO", "not implemented", "not sure", "[TBD]", or similar placeholder text with actual project information
+6. **Maintain professional quality**: Use enterprise-grade language and structure
 
-After updating the files, run the \`setup_copilot_instructions\` tool to ensure AI assistant integration is current.
+## Quality Standards:
+- **Professional tone** suitable for enterprise documentation
+- **Specific references** to actual code files and implementations
+- **Technical accuracy** based on actual project structure
+- **Business context** relevant to this specific project
+- **Current information**: Reflect the latest state of the project
+- **Complete content**: Replace any placeholder text like "TODO", "not implemented", "TBD", or "not sure" with actual project details
+
+After updating the files, also run the \`setup_copilot_instructions\` tool to configure AI assistant integration.
 
 ---
 
-**Next Step**: Please read the current memory bank and project files, then update the specified files with current project information.`
+**Next Step**: Please read the existing memory bank files and current project files, then update all 6 memory bank files with comprehensive, current project information.`
       }]
     };
 
@@ -120,7 +129,7 @@ After updating the files, run the \`setup_copilot_instructions\` tool to ensure 
     return {
       content: [{
         type: 'text',
-        text: `# Memory Bank Update Error\n\n**Error**: ${error.message}\n\nPlease check the project path and memory bank existence, then try again.`
+        text: `# Memory Bank Update Error\n\n**Error**: ${error.message}\n\nPlease check the project path and try again.`
       }],
       isError: true
     };
