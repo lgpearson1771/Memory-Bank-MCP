@@ -26,20 +26,9 @@ A production-ready MCP server that automatically generates comprehensive memory 
 
 **For VS Code users, click one of these links to automatically configure the MCP server:**
 
-<table>
-<tr>
-<td align="center">
-<a href="vscode://ms-vscode.mcp/installServer?config=%7B%22memory-bank-generator%22%3A%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40lgpearson1771%2Fmemory-bank-mcp%40latest%22%5D%2C%22type%22%3A%22stdio%22%7D%7D">
-<img src="https://img.shields.io/badge/Install-VS%20Code-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Install in VS Code" />
-</a>
-</td>
-<td align="center">
-<a href="vscode-insiders://ms-vscode.mcp/installServer?config=%7B%22memory-bank-generator%22%3A%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40lgpearson1771%2Fmemory-bank-mcp%40latest%22%5D%2C%22type%22%3A%22stdio%22%7D%7D">
-<img src="https://img.shields.io/badge/Install-VS%20Code%20Insiders-1F9CF0?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Install in VS Code Insiders" />
-</a>
-</td>
-</tr>
-</table>
+[![Add to VS Code](https://img.shields.io/badge/Add%20to-VS%20Code-blue?logo=visualstudiocode)](vscode://ms-microsoft.mcp/add-mcp-server?json={"memory-bank-generator":{"command":"npx","args":["@lgpearson1771/memory-bank-mcp@latest"],"type":"stdio"}})
+
+[![Add to VS Code Insiders](https://img.shields.io/badge/Add%20to-VS%20Code%20Insiders-green?logo=visualstudiocode)](vscode-insiders://ms-microsoft.mcp/add-mcp-server?json={"memory-bank-generator":{"command":"npx","args":["@lgpearson1771/memory-bank-mcp@latest"],"type":"stdio"}})
 
 > **📝 Note**: These buttons automatically add the npm package configuration to your `mcp.json` file.
 > If the links don't open VS Code, try right-clicking and selecting "Open link" or use manual setup below.
