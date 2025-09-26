@@ -1,13 +1,24 @@
 {
-  "name": "memory-bank-generator-mcp",
+  "name": "@lgpearson1771/memory-bank-mcp",
   "version": "1.0.0",
   "description": "An intelligent MCP server that automatically generates, maintains, and evolves comprehensive memory bank files for any software project",
   "main": "dist/index.js",
   "type": "module",
+  "bin": {
+    "memory-bank-mcp": "bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
+    "prepublishOnly": "npm run build",
     "test:unit": "jest --config jest.unit.config.cjs",
     "test:integration": "jest --config config/jest.integration.config.cjs",
     "test:all": "npm run test:unit && npm run test:integration",

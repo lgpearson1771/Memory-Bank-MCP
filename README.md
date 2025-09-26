@@ -22,7 +22,40 @@ A production-ready MCP server that automatically generates comprehensive memory 
 
 ## 🚀 Quick Start
 
-### 1. Install
+### Installation Options
+
+**🌟 Option 1: npm package (Recommended - No local setup required)**
+
+The easiest way to use Memory Bank MCP is via npm. The one-click install buttons above will automatically configure this for you, or you can add it manually to your MCP configuration:
+
+**VS Code MCP Extension:**
+```json
+{
+  "servers": {
+    "memory-bank-generator": {
+      "command": "npx",
+      "args": ["@lgpearson1771/memory-bank-mcp@latest"],
+      "type": "stdio"
+    }
+  }
+}
+```
+
+**Claude Desktop:**
+```json
+{
+  "mcpServers": {
+    "memory-bank-generator": {
+      "command": "npx",
+      "args": ["@lgpearson1771/memory-bank-mcp@latest"]
+    }
+  }
+}
+```
+
+**🛠️ Option 2: Local Development Setup**
+
+For development or customization:
 
 ```bash
 git clone https://github.com/lgpearson1771/Memory-Bank-MCP.git
@@ -31,16 +64,33 @@ npm install
 npm run build
 ```
 
-## 📚 Documentation
+### Setup for VS Code
 
-**📁 [Complete Documentation](docs/)** - All guides, setup instructions, and technical details
+1. **Quick Install (Recommended):**
+   
+   Click one of the buttons below to automatically add the npm package configuration to your `mcp.json`:
 
-**Quick Links:**
-- **[Setup Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Installation for Claude Desktop and VS Code
-- **[Configuration Examples](docs/examples/)** - Ready-to-use config files
-- **[Architecture & Testing](docs/)** - Technical documentation and testing strategy
+   [![Install Server](https://img.shields.io/badge/Install-VS%20Code-blue)](vscode://ms-vscode.mcp/installServer?config=%7B%22memory-bank-generator%22%3A%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40lgpearson1771%2Fmemory-bank-mcp%40latest%22%5D%2C%22type%22%3A%22stdio%22%7D%7D)
+   [![Install Server (Insiders)](https://img.shields.io/badge/Install-VS%20Code%20Insiders-green)](vscode-insiders://ms-vscode.mcp/installServer?config=%7B%22memory-bank-generator%22%3A%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40lgpearson1771%2Fmemory-bank-mcp%40latest%22%5D%2C%22type%22%3A%22stdio%22%7D%7D)
+   
+   *These buttons will automatically install and configure the latest published version from npm.*
 
-1. **Add to VS Code's mcp.json:**
+2. **Manual Configuration (Alternative):**
+   
+   **Option A: npm package (recommended)**
+   ```json
+   {
+     "servers": {
+       "memory-bank-generator": {
+         "command": "npx",
+         "args": ["@lgpearson1771/memory-bank-mcp@latest"],
+         "type": "stdio"
+       }
+     }
+   }
+   ```
+   
+   **Option B: Local installation**
    ```json
    {
      "servers": {
@@ -56,8 +106,6 @@ npm run build
    }
    ```
 
-2. **Restart VS Code** - Tools available through Copilot!
-
 ### For Claude Desktop
 
 1. **Find Claude Desktop's configuration file:**
@@ -65,6 +113,20 @@ npm run build
    - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 2. **Add your MCP server configuration:**
+   
+   **Option A: npm package (recommended)**
+   ```json
+   {
+     "mcpServers": {
+       "memory-bank-generator": {
+         "command": "npx",
+         "args": ["@lgpearson1771/memory-bank-mcp@latest"]
+       }
+     }
+   }
+   ```
+   
+   **Option B: Local installation**
    ```json
    {
      "mcpServers": {
@@ -100,7 +162,16 @@ node tests/integration/quick-test.js
 
 You should see: ✅ All tests passed! MCP tools are working correctly.
 
-## 🛠️ Available Tools
+## � Documentation
+
+**📁 [Complete Documentation](docs/)** - All guides, setup instructions, and technical details
+
+**Quick Links:**
+- **[Setup Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Installation for Claude Desktop and VS Code
+- **[Configuration Examples](docs/examples/)** - Ready-to-use config files
+- **[Architecture & Testing](docs/)** - Technical documentation and testing strategy
+
+## �🛠️ Available Tools
 
 **5 MCP Tools for Memory Bank Management:**
 
