@@ -26,7 +26,7 @@ A production-ready MCP server that automatically generates comprehensive memory 
 
 **For VS Code users, click one of these buttons to automatically configure the MCP server:**
 
-[<img src="https://img.shields.io/badge/VS_Code-VS_Code?style=flat-square&label=Install%20Server&color=0098FF" alt="Install in VS Code">](https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522memory-bank-generator%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540lgpearson1771%252Fmemory-bank-mcp%2540latest%2522%255D%257D) [<img alt="Install in VS Code Insiders" src="https://img.shields.io/badge/VS_Code_Insiders-VS_Code_Insiders?style=flat-square&label=Install%20Server&color=24bfa5">](https://insiders.vscode.dev/redirect?url=vscode-insiders%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522memory-bank-generator%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540lgpearson1771%252Fmemory-bank-mcp%2540latest%2522%255D%257D)
+[<img src="https://img.shields.io/badge/VS_Code-VS_Code?style=flat-square&label=Install%20Server&color=0098FF" alt="Install in VS Code">](https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522MemGen%2520MCP%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540lgpearson1771%252Fmemory-bank-mcp%2540latest%2522%255D%257D) [<img alt="Install in VS Code Insiders" src="https://img.shields.io/badge/VS_Code_Insiders-VS_Code_Insiders?style=flat-square&label=Install%20Server&color=24bfa5">](https://insiders.vscode.dev/redirect?url=vscode-insiders%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522MemGen%2520MCP%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540lgpearson1771%252Fmemory-bank-mcp%2540latest%2522%255D%257D)
 
 > **📝 Note**: These buttons automatically add the npm package configuration to your `mcp.json` file.
 > If the links don't open VS Code, try right-clicking and selecting "Open link" or use manual setup below.
@@ -41,7 +41,7 @@ The easiest way to use Memory Bank MCP is via npm. The one-click install buttons
 ```json
 {
   "servers": {
-    "memory-bank-generator": {
+    "MemGen MCP": {
       "command": "npx",
       "args": ["@lgpearson1771/memory-bank-mcp@latest"],
       "type": "stdio"
@@ -54,7 +54,7 @@ The easiest way to use Memory Bank MCP is via npm. The one-click install buttons
 ```json
 {
   "mcpServers": {
-    "memory-bank-generator": {
+    "MemGen MCP": {
       "command": "npx",
       "args": ["@lgpearson1771/memory-bank-mcp@latest"]
     }
@@ -81,7 +81,7 @@ npm run build
    ```json
    {
      "servers": {
-       "memory-bank-generator": {
+       "MemGen MCP": {
          "command": "npx",
          "args": ["@lgpearson1771/memory-bank-mcp@latest"],
          "type": "stdio"
@@ -94,7 +94,7 @@ npm run build
    ```json
    {
      "servers": {
-       "memory-bank-generator": {
+       "MemGen MCP": {
          "command": "node",
          "args": ["<MCP_SERVER_PATH>\\dist\\index.js"],
          "env": {
@@ -118,7 +118,7 @@ npm run build
    ```json
    {
      "mcpServers": {
-       "memory-bank-generator": {
+       "MemGen MCP": {
          "command": "npx",
          "args": ["@lgpearson1771/memory-bank-mcp@latest"]
        }
@@ -130,7 +130,7 @@ npm run build
    ```json
    {
      "mcpServers": {
-       "memory-bank-generator": {
+       "MemGen MCP": {
          "command": "node",
          "args": ["<MCP_SERVER_PATH>\\dist\\index.js"],
          "env": {
@@ -162,7 +162,7 @@ node tests/integration/quick-test.js
 
 You should see: ✅ All tests passed! MCP tools are working correctly.
 
-## � Documentation
+## Documentation
 
 **📁 [Complete Documentation](docs/)** - All guides, setup instructions, and technical details
 
@@ -171,7 +171,7 @@ You should see: ✅ All tests passed! MCP tools are working correctly.
 - **[Configuration Examples](docs/examples/)** - Ready-to-use config files
 - **[Architecture & Testing](docs/)** - Technical documentation and testing strategy
 
-## �🛠️ Available Tools
+##�🛠️ Available Tools
 
 **5 MCP Tools for Memory Bank Management:**
 
