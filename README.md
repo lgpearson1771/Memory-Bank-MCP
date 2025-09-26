@@ -70,10 +70,16 @@ npm run build
    
    Click one of the buttons below to automatically add the npm package configuration to your `mcp.json`:
 
-   [![Install Server](https://img.shields.io/badge/Install-VS%20Code-blue)](vscode://ms-vscode.mcp/installServer?config=%7B%22memory-bank-generator%22%3A%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40lgpearson1771%2Fmemory-bank-mcp%40latest%22%5D%2C%22type%22%3A%22stdio%22%7D%7D)
-   [![Install Server (Insiders)](https://img.shields.io/badge/Install-VS%20Code%20Insiders-green)](vscode-insiders://ms-vscode.mcp/installServer?config=%7B%22memory-bank-generator%22%3A%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40lgpearson1771%2Fmemory-bank-mcp%40latest%22%5D%2C%22type%22%3A%22stdio%22%7D%7D)
+   **VS Code:** [🚀 Install Server](vscode://ms-vscode.mcp/installServer?config=%7B%22memory-bank-generator%22%3A%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40lgpearson1771%2Fmemory-bank-mcp%40latest%22%5D%2C%22type%22%3A%22stdio%22%7D%7D)
    
-   *These buttons will automatically install and configure the latest published version from npm.*
+   **VS Code Insiders:** [🚀 Install Server](vscode-insiders://ms-vscode.mcp/installServer?config=%7B%22memory-bank-generator%22%3A%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40lgpearson1771%2Fmemory-bank-mcp%40latest%22%5D%2C%22type%22%3A%22stdio%22%7D%7D)
+   
+   *These links will automatically install and configure the latest published version from npm.*
+
+   > **Note**: If the install links don't work, you may need to:
+   > - Make sure VS Code is installed and set as default for `vscode://` protocol
+   > - Try right-clicking the link and selecting "Open link" 
+   > - Use the manual configuration below if protocol links are blocked
 
 2. **Manual Configuration (Alternative):**
    
