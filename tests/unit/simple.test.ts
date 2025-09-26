@@ -3,9 +3,9 @@
  * Tests the core functionality of our Memory Bank MCP tools
  */
 
-import { generateMemoryBankTool } from '../../dist/tools/generateMemoryBank.js';
-import { handleUpdateMemoryBank } from '../../dist/tools/updateMemoryBank.js';
-import { handleValidateMemoryBank } from '../../dist/tools/validateMemoryBank.js';
+import { generateMemoryBankTool } from '../../src/tools/generateMemoryBank.js';
+import { handleUpdateMemoryBank } from '../../src/tools/updateMemoryBank.js';
+import { handleValidateMemoryBank } from '../../src/tools/validateMemoryBank.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -110,11 +110,32 @@ describe('MCP Tools Unit Tests', () => {
         );
       }
       
-      // Create copilot instructions
+      // Create copilot instructions with proper memory bank references
       const githubDir = path.join(testProjectPath, '.github');
+      const copilotInstructions = `# Copilot Instructions
+
+# Memory Bank
+
+I am GitHub Copilot, an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation - it's what drives me to maintain perfect documentation. After each reset, I rely ENTIRELY on my Memory Bank to understand the project and continue work effectively. I MUST read ALL memory bank files at the start of EVERY task - this is not optional.
+
+## Memory Bank Structure
+
+The Memory Bank consists of core files and optional context files, all in Markdown format. Files build upon each other in a clear hierarchy:
+
+### Core Files (Required)
+1. \`projectbrief.md\` ✅
+2. \`productContext.md\` ✅  
+3. \`activeContext.md\` ✅
+4. \`systemPatterns.md\` ✅
+5. \`techContext.md\` ✅
+6. \`progress.md\` ✅
+
+REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
+`;
+      
       await fs.writeFile(
         path.join(githubDir, 'copilot-instructions.md'),
-        '# Copilot Instructions\n\nMemory bank integration enabled.'
+        copilotInstructions
       );
 
       const result = await handleValidateMemoryBank({
